@@ -1,0 +1,262 @@
+/*Fuente 'Montserrat'*/
+@import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700,800,900&display=swap');
+
+.number {
+    font-family: 'Montserrat', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+.white-text {
+    color: #fff;
+}
+
+/*Colores según el porcentaje*/
+.low-compliance {
+    background-color: #a31818;
+    color: #fff;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 900;
+}
+
+.low-medium-compliance {
+    background-color: red;
+    color: #fff;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 900;
+}
+
+.medium-compliance {
+    background-color: orange;
+    color: #24262d;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 900;
+}
+
+.high-medium-compliance {
+    background-color: yellow;
+    color: #24262d;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 900;
+}
+
+.high-compliance {
+    background-color: green;
+    color: #24262d;
+    font-family: 'Montserrat',sans-serif;
+    font-weight: 900;
+}
+/*Final colores porcentaje*/
+
+/* Barra de navegación */
+.button-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 13px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+
+/* Color principal botones #ff5d35ef*/
+/* Botón barra de navegación */
+.button-bar button {
+    background-color: #24262d;
+    color: #fff;
+    border: none;
+    padding: 12px 3px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 170px;
+    height: 60px;
+}
+
+/*Color para saber en que formulario te encuentras*/
+.button-bar .thisBtn {
+    background-color: #ff5d35ef;
+}
+
+/*Pasar el ratón por encima del botón*/
+.button-bar button:hover,
+.btnSave:hover {
+    background-color: #ff5d35ef;
+    transform: translateY(-3px);
+}
+
+/* Encabezado grande */
+.header-box {
+    text-align: center;
+    margin: 40px auto;
+    max-width: 1000px;
+}
+
+.header-box h1 {
+    font-size: 2.2rem;
+    font-family: 'Montserrat', sans-serif;
+    color: #ff5d35ef;
+}
+
+/* Contenedor para el texto intermedio (lorem) */
+.text-box {
+    max-width: 900px;
+    margin: 20px auto;
+    text-align: center;
+    /*Fuente*/
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+
+/* Contenedor con borde alrededor del formulario */
+.form-container {
+    max-width: 1200px;
+    /* Ajusta el ancho */
+    margin: 20px auto;
+    /* Centra horizontalmente */
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+}
+
+/* Tabla */
+.form-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    /* Elimina separación entre celdas */
+    border-radius: 10px;
+    /* Aplica borde redondeado */
+    overflow: hidden;
+    /* Mantiene el borde redondeado */
+    background-color: #fff;
+}
+
+/* Encabezado de la tabla */
+.form-table thead {
+    background-color: #24262d;
+    color: #fff;
+}
+
+/* Estilos de las celdas */
+.form-table th {
+    padding: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+}
+
+/* Aplica bordes redondeados solo en las esquinas de la tabla */
+.form-table thead tr:first-child th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.form-table thead tr:first-child th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.form-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
+}
+
+.form-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
+}
+
+.form-table td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+}
+
+
+/* Fila de encabezado de cada grupo */
+.group-heading-row td {
+    background-color: #eaeaea;
+    text-transform: uppercase;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+
+/* Celda "Cumple" */
+.compliance-cell {
+    text-align: center;
+}
+
+.compliance-cell select {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+}
+
+/* PDF */
+.pdf-cell {
+    text-align: center;
+}
+
+.pdf-button {
+    background-color: grey;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+
+.pdf-button.pdf-uploaded {
+    background-color: #ff5d35ef;
+    color: #24262d;
+}
+
+.btnSave {
+    background-color: #24262d;
+    color: #fff;
+    border: none;
+    padding: 12px 3px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    width: 170px;
+    height: 60px;
+    margin-top: 10px;
+}
+
+/* Estilos para el input de "Valor crítico" */
+.form-table input[type="number"] {
+    width: 60px;
+    padding: 6px;
+    font-size: 1rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    text-align: center;
+    border: 2px solid #24262d;
+    border-radius: 5px;
+    outline: none;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Cambia de color al hacer clic para mejor interacción */
+.form-table input[type="number"]:focus {
+    border-color: #ff5d35ef; 
+    box-shadow: 0 0 5px rgba(255, 93, 53, 0.5);
+}

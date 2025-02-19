@@ -1,0 +1,131 @@
+<div class="home-container">
+  <!-- Barra de navegación -->
+  <nav class="button-bar">
+    <button class="thisBtn" (click)="navigateTo('/')">DashBoard</button>
+    <button (click)="navigateTo('/incumplimiento-capitulo')">Incumplimiento Del Capítulo X</button>
+    <button (click)="navigateTo('/otros-incumplimientos')">Otros incumplimientos</button>
+    <button (click)="navigateTo('/incumplimientos-ros')">Incumplimientos ROS</button>
+    <button (click)="navigateTo('/incumplimiento-ddi')">Incumplimiento DDI</button>
+    <button (click)="navigateTo('/etapas-sagrilaft')">Etapas Sagrilaft</button>
+    <button (click)="navigateTo('/violacion-leyes')">Violación de leyes y regulación</button>
+  </nav>
+
+  <div class="form-container">
+    <!-- Tabla de probabilidad-impacto-valor critico- ETC -->
+    <table class="form-table">
+      <thead>
+        <tr>
+          <th>PROBABILIDAD</th>
+          <th>IMPACTO</th>
+          <th>Valor crítico</th>
+          <th>SCORING</th>
+          <th>CUMPLIMIENTO GLOBAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="number" [ngClass]="{
+            'low-compliance': probabilidad === 5,
+            'low-medium-compliance': probabilidad === 4,
+            'medium-compliance': probabilidad === 3,
+            'high-medium-compliance': probabilidad === 2,
+            'high-compliance': probabilidad === 1
+          }">
+            {{ probabilidad }}
+          </td>
+          <td class="number">$ COP {{ impactoCalculado | number:'1.0-0' }}</td>
+
+          <td>
+            <input type="number" [(ngModel)]="valorCritico" min="0" max="100" 
+            (ngModelChange)="actualizarValorCritico()"
+            (keydown)="validarInput($event)"/>
+          </td>
+          <td class="number" >{{scoring | number:'1.2-2'}}</td>
+          <td class="number" [ngClass]="{
+            'low-compliance': cumplimientoTotal <= 20,
+            'low-medium-compliance': cumplimientoTotal > 20 && cumplimientoTotal <= 40,
+            'medium-compliance': cumplimientoTotal > 40 && cumplimientoTotal <= 60,
+            'high-medium-compliance': cumplimientoTotal > 60 && cumplimientoTotal <= 80,
+            'high-compliance': cumplimientoTotal > 80
+            }">
+            {{cumplimientoTotal | number:'1.2-2'}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Tabla de Escenarios -->
+    <table class="form-table">
+      <thead>
+        <tr>
+          <th>VARIABLES</th>
+          <th>ESCENARIO ACTUAL</th>
+          <th>ESCENARIO ALTA AFECTACIÓN</th>
+          <th>ESCENARIO CATASTRÓFICO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>RIESGO LEGAL</td>
+          <td class="number high-risk">$ 210.000.000</td>
+          <td class="number high-risk">$ 420.000.000</td>
+          <td class="number high-risk">$ 840.000.000</td>
+        </tr>
+        <tr>
+          <td>EXCEDENTES ÚLTIMO AÑO</td>
+          <td class="number">$ 18.960.015.000,00</td>
+          <td class="number">$ 18.960.015.000,00</td>
+          <td class="number">$ 18.960.015.000,00</td>
+        </tr>
+        <tr>
+          <td>IMPACTO SOBRE EXCEDENTES</td>
+          <td class="number low-impact">1,108%</td>
+          <td class="number medium-impact">2,215%</td>
+          <td class="number high-impact">4,430%</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mensaje arriba -->
+    <div class="header-box">
+      <h1>Reporte de Cumplimiento Legal</h1>
+    </div>
+    
+    <!-- Tabla de Riesgo Legal - Puntaje - ETC -->
+    <table class="form-table">
+      <thead>
+        <tr>
+          <th>RIESGO LEGAL</th>
+          <th>PUNTAJE</th>
+          <th>ITEMS</th>
+          <th>PREGUNTAS</th>
+          <th>% NIVEL DE CUMPLIMIENTO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of complianceData">
+          <td class="number">{{item.riesgo}}</td>
+          <td class="number">{{item.puntaje}}</td>
+          <td class="number">{{item.items}}</td>
+          <td class="number">{{item.preguntas}}</td>
+          <td class="number" [ngClass]="{
+            'low-compliance': item.nivelCumplimiento <= 20,
+            'low-medium-compliance': item.nivelCumplimiento > 20 && item.nivelCumplimiento <= 40,
+            'medium-compliance': item.nivelCumplimiento > 40 && item.nivelCumplimiento <= 60,
+            'high-medium-compliance': item.nivelCumplimiento > 60 && item.nivelCumplimiento <= 80,
+            'high-compliance': item.nivelCumplimiento > 80
+          }">
+            {{item.nivelCumplimiento | number:'1.0-0'}}
+          </td>
+        </tr>
+        <tr class="total-row">
+          <td class="number">Total</td>
+          <td class="number">{{totalPuntaje}}</td>
+          <td class="number"></td>
+          <td class="number">{{totalPreguntas}}</td>
+          <td class="number"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
