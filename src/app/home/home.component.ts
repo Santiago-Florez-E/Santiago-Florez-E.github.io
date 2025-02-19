@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
-import { group } from '@angular/animations';
 
 interface ComplianceItem {
   riesgo: string;
@@ -22,94 +21,41 @@ export class HomeComponent implements OnInit {
 
   valorCritico: number = 90;
   scoring: number = 0;
-  salarioMinimo : number = 1423500;
+  salarioMinimo: number = 1423500;
   multa: number = 200;
-  impactoCalculado = 0;
+  impactoCalculado: number = 0;
+  nProbabilidad: number = 0;
+  _riesgoLegal: number = 0;
 
   complianceData: ComplianceItem[] = [
-    {
-      riesgo: 'Incumplimientos específicos del Capítulo X',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0,
-      participacionW: 0,
-      cumpleW: 0
-    },
-    {
-      riesgo: 'Otros incumplimientos detectados',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0,
-      participacionW: 0,
-      cumpleW: 0
-    },
-    {
-      riesgo: 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0.00,
-      participacionW: 0,
-      cumpleW: 0
-    },
-    {
-      riesgo: 'Incumplimientos en la Debida Diligencia',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0.00,
-      participacionW: 0,
-      cumpleW: 0
-    },
-    {
-      riesgo: 'Incumplimientos en las Etapas del SAGRILAFT',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0.00,
-      participacionW: 0,
-      cumpleW: 0
-    },
-    {
-      riesgo: 'Violación de leyes y regulación',
-      puntaje: 0,
-      items: 0,
-      preguntas: 0,
-      nivelCumplimiento: 0.00,
-      participacionW: 0,
-      cumpleW: 0
-    }
+    { riesgo: 'Incumplimientos específicos del Capítulo X', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Otros incumplimientos detectados', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Incumplimientos en la Debida Diligencia', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Incumplimientos en las Etapas del SAGRILAFT', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Violación de leyes y regulación', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 }
   ];
+
   constructor(private router: Router, private dataService: DataService) { }
 
   ngOnInit(): void {
-    this.updateAllComplianceData(); // Cargar datos almacenados
-    this.cargarValorCritico()
-    this.calcularImpacto()
+    this.updateAllComplianceData();
+    this.cargarValorCritico();
+    this.calcularImpacto();
+    this.calcularRiesgoLegal();
   }
 
   updateAllComplianceData(): void {
     const complianceTypes = ['capituloX', 'otros', 'ddi', 'leyes', 'ros', 'sagrilaft'];
 
-    // Primero actualizamos complianceData con los valores correctos
     complianceTypes.forEach(type => {
       const totalCompliance = this.dataService.getTotalCompliance(type);
       const groupCount = this.dataService.getGroupCount(type);
       const questionCount = this.dataService.getQuestionCount(type);
-
       this.updateComplianceData(type, totalCompliance, groupCount, questionCount);
     });
 
-    // 📌 Ahora que complianceData está actualizado, calculamos el total real
-    const totalPreguntasActual = this.complianceData.reduce((sum, item) => sum + item.preguntas, 0);
-
-    // 📌 Ahora recalculamos la participación y otros valores con el total correcto
-    this.complianceData.forEach(item => {
-      item.participacionW = this.calculateParticipacionW(item.preguntas, totalPreguntasActual);
-      item.cumpleW = this.calculateCumpleW(item.nivelCumplimiento, item.participacionW)
-    });
+    this.recalculateParticipationAndScores();
     this.calcularScoring();
   }
 
@@ -124,6 +70,14 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  recalculateParticipationAndScores(): void {
+    const totalPreguntasActual = this.complianceData.reduce((sum, item) => sum + item.preguntas, 0);
+
+    this.complianceData.forEach(item => {
+      item.participacionW = this.calculateParticipacionW(item.preguntas, totalPreguntasActual);
+      item.cumpleW = this.calculateCumpleW(item.nivelCumplimiento, item.participacionW);
+    });
+  }
 
   getRiskName(type: string): string {
     const riskNames: { [key: string]: string } = {
@@ -143,104 +97,112 @@ export class HomeComponent implements OnInit {
     return (1 - ((totalCompliance - questionCount) / (maxCompliance - questionCount))) * 100; // Calcular el porcentaje
   }
 
-  calculateParticipacionW(questionCount: number, totalPreguntas: number) {
-    return (questionCount / totalPreguntas);
+  calculateParticipacionW(questionCount: number, totalPreguntas: number): number {
+    return totalPreguntas ? (questionCount / totalPreguntas) : 0;
   }
 
-  calculateCumpleW(calculateParticipacionW: number, calculateNivelCumplimiento: number) {
-    return calculateNivelCumplimiento * calculateParticipacionW
+  calculateCumpleW(calculateParticipacionW: number, calculateNivelCumplimiento: number): number {
+    return calculateNivelCumplimiento * calculateParticipacionW;
   }
 
-  calcularScoring() {
+  calcularScoring(): void {
     this.cargarValorCritico(); // Asegurar que valorCritico esté actualizado
 
     if (this.valorCritico === 100) {
       this.scoring = this.cumplimientoTotal === 100 ? 100 : 0;
     } else {
-      this.scoring = ((this.cumplimientoTotal - this.valorCritico) / (100 - this.valorCritico)) * 100;
-    }
-
-    if (this.scoring < 0) {
-      this.scoring = 0;
+      this.scoring = Math.max(0, ((this.cumplimientoTotal - this.valorCritico) / (100 - this.valorCritico)) * 100);
     }
 
     localStorage.setItem('scoring', this.scoring.toString());
   }
 
-  cargarScoring() {
+  cargarScoring(): void {
     const scoringGuardado = localStorage.getItem('scoring');
     if (scoringGuardado !== null) {
       this.scoring = parseFloat(scoringGuardado);
     }
   }
 
-  calcularImpacto(){
-    this.impactoCalculado = this.salarioMinimo * this.multa
+  calcularImpacto(): void {
+    this.impactoCalculado = this.salarioMinimo * this.multa;
   }
 
-  // 📌 Guardar el valor en localStorage cuando cambie
-  actualizarValorCritico() {
-    if (this.valorCritico < 0) {
-      this.valorCritico = 0;
-    } else if (this.valorCritico > 100) {
-      this.valorCritico = 100;
-    }
+  actualizarValorCritico(): void {
+    this.valorCritico = Math.max(0, Math.min(100, this.valorCritico));
     localStorage.setItem('valorCritico', this.valorCritico.toString());
 
-    // Llama a las funciones que dependen de valorCritico
+    this.calcularRiesgoLegal();
     this.calcularScoring();
   }
 
-  //Valida el input cuando escribre en el valor
-  validarInput(event: KeyboardEvent) {
+  validarInput(event: KeyboardEvent): void {
     const input = event.target as HTMLInputElement;
     setTimeout(() => {
       let value = parseInt(input.value, 10);
-
-      if (isNaN(value) || value < 0) {
-        value = 0;
-      } else if (value > 100) {
-        value = 100;
-      }
-
-      this.valorCritico = value;
-      input.value = value.toString(); // Asegurar que el input refleje el valor correcto
+      this.valorCritico = isNaN(value) ? 0 : Math.max(0, Math.min(100, value));
+      input.value = this.valorCritico.toString(); // Asegurar que el input refleje el valor correcto
       this.actualizarValorCritico(); // Guardar el valor corregido
     }, 50);
   }
 
-  // 📌 Cargar el valor desde localStorage al iniciar
-  cargarValorCritico() {
+  cargarValorCritico(): void {
     const valorGuardado = localStorage.getItem('valorCritico');
     if (valorGuardado !== null) {
       this.valorCritico = parseInt(valorGuardado, 10);
     }
   }
 
-  //Consigue el total del puntaje sumando
   get totalPuntaje(): number {
-    return this.complianceData.reduce((sum, puntaje) => sum + puntaje.puntaje, 0);
+    return this.complianceData.reduce((sum, item) => sum + item.puntaje, 0);
   }
 
-  //Consigue el total de los porcentajes sumando
   get cumplimientoTotal(): number {
     return this.complianceData.reduce((sum, item) => sum + item.cumpleW, 0);
   }
 
-  //Consigue el total de las preguntas sumando
   get totalPreguntas(): number {
-    return this.complianceData.reduce((sum, pregunta) => sum + pregunta.preguntas, 0);
+    return this.complianceData.reduce((sum, item) => sum + item.preguntas, 0);
   }
 
   get probabilidad(): number {
     if (this.scoring < 20) return 5;
-    if (this.scoring >= 20 && this.scoring < 40) return 4;
-    if (this.scoring >= 40 && this.scoring < 60) return 3;
-    if (this.scoring >= 60 && this.scoring < 80) return 2;
+    if (this.scoring < 40) return 4;
+    if (this.scoring < 60) return 3;
+    if (this.scoring < 80) return 2;
     return 1;
   }
 
-  navigateTo(route: string) {
+  get riesgoLegal(): number {
+    return this._riesgoLegal;
+  }
+
+  get riesgoLegalA(): number {
+    return this.calculateRiesgoLegalWithFactor(1.65);
+  }
+
+  get riesgoLegalC(): number {
+    return this.calculateRiesgoLegalWithFactor(2.33);
+  }
+
+  private calculateRiesgoLegalWithFactor(factor: number): number {
+    const factorSqrt = Math.sqrt(this.complianceData.length);
+    return this._riesgoLegal + factor * (this._riesgoLegal / factorSqrt);
+  }
+
+  calcularProbImp(): void {
+    this.nProbabilidad = this.probabilidad === 5 ? 1 :
+      this.probabilidad === 4 ? 0.8 :
+        this.probabilidad === 3 ? 0.6 :
+          this.probabilidad === 2 ? 0.4 : 0;
+  }
+
+  calcularRiesgoLegal(): void {
+    this.calcularProbImp();
+    this._riesgoLegal = this.nProbabilidad * this.impactoCalculado;
+  }
+
+  navigateTo(route: string): void {
     this.router.navigate([route]);
   }
 }

@@ -33,7 +33,7 @@
           }">
             {{ probabilidad }}
           </td>
-          <td class="number">$ COP {{ impactoCalculado | number:'1.0-0' }}</td>
+          <td class="number">$ {{ impactoCalculado | number:'1.0-0' }}</td>
 
           <td>
             <input type="number" [(ngModel)]="valorCritico" min="0" max="100" 
@@ -67,9 +67,9 @@
       <tbody>
         <tr>
           <td>RIESGO LEGAL</td>
-          <td class="number high-risk">$ 210.000.000</td>
-          <td class="number high-risk">$ 420.000.000</td>
-          <td class="number high-risk">$ 840.000.000</td>
+          <td class="number high-risk">$ {{riesgoLegal | number:'1.0-0'}}</td>
+          <td class="number high-risk">$ {{riesgoLegalA | number:'1.0-0'}}</td>
+          <td class="number high-risk">$ {{riesgoLegalC | number:'1.0-0'}}</td>
         </tr>
         <tr>
           <td>EXCEDENTES ÚLTIMO AÑO</td>
