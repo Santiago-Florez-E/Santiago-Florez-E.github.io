@@ -52,21 +52,32 @@
             <td>{{ group.groupTitle }}</td>
             <td></td>
             <td class="pdf-cell">
-              <button
-                class="pdf-button"
-                [class.pdf-uploaded]="group.pdfUploaded"
-                (click)="onSelectPDF(pdfInput)"
-              >
-                PDF
-              </button>
-              <input
-                #pdfInput
-                type="file"
-                accept="application/pdf"
-                (change)="onPDFUpload(group, pdfInput.files)"
-                hidden
-              />
-            </td>
+              <div class="pdf-container">
+                <button
+                  class="pdf-button"
+                  [class.pdf-uploaded]="group.pdfUploaded"
+                  (click)="onSelectPDF(pdfInput)"
+                >
+                  PDF
+                </button>
+                <input
+                  #pdfInput
+                  type="file"
+                  accept="application/pdf"
+                  (change)="onPDFUpload(group, pdfInput.files)"
+                  hidden
+                />
+                
+                <!-- Se muestra solo si 'group.pdfUploaded' es true -->
+                <button
+                  class="download-button"
+                  *ngIf="group.pdfUploaded"
+                  (click)="downloadPDF(group)"
+                >
+                🔽
+                </button>
+              </div>
+            </td>            
           </tr>
 
           <!-- Filas de preguntas (Pregunta | Cumple | Acta/Evidencia) -->

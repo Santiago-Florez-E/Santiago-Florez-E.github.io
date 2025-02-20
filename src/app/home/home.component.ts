@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { PdfGeneratorService } from '../services/pdf-generator.service';
 import { DataService } from '../services/data.service';
 
 interface ComplianceItem {
@@ -19,13 +20,17 @@ interface ComplianceItem {
 })
 export class HomeComponent implements OnInit {
 
+  currentDate: Date = new Date();
+
   valorCritico: number = 90;
-  scoring: number = 0;
+  excedentes: number = 10000000000;
   salarioMinimo: number = 1423500;
   multa: number = 200;
   impactoCalculado: number = 0;
   nProbabilidad: number = 0;
   _riesgoLegal: number = 0;
+  scoring: number = 0;
+
 
   complianceData: ComplianceItem[] = [
     { riesgo: 'Incumplimientos específicos del Capítulo X', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
@@ -36,7 +41,7 @@ export class HomeComponent implements OnInit {
     { riesgo: 'Violación de leyes y regulación', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 }
   ];
 
-  constructor(private router: Router, private dataService: DataService) { }
+  constructor(private router: Router, private dataService: DataService, private pdfGenerator: PdfGeneratorService) { }
 
   ngOnInit(): void {
     this.updateAllComplianceData();
@@ -131,9 +136,9 @@ export class HomeComponent implements OnInit {
   actualizarValorCritico(): void {
     this.valorCritico = Math.max(0, Math.min(100, this.valorCritico));
     localStorage.setItem('valorCritico', this.valorCritico.toString());
-
-    this.calcularRiesgoLegal();
     this.calcularScoring();
+    this.calcularRiesgoLegal();
+    this.currentDate = new Date()
   }
 
   validarInput(event: KeyboardEvent): void {
@@ -151,6 +156,59 @@ export class HomeComponent implements OnInit {
     if (valorGuardado !== null) {
       this.valorCritico = parseInt(valorGuardado, 10);
     }
+  }
+
+
+
+  private calculateRiesgoLegalWithFactor(factor: number): number {
+    const factorSqrt = Math.sqrt(this.complianceData.length);
+    return this._riesgoLegal + factor * (this._riesgoLegal / factorSqrt);
+  }
+
+  calcularProbImp(): void {
+    if (this.probabilidad === 5) {
+      this.nProbabilidad = 1;
+    } else if (this.probabilidad === 4) {
+      this.nProbabilidad = 0.8;
+    } else if (this.probabilidad === 3) {
+      this.nProbabilidad = 0.6;
+    } else if (this.probabilidad === 2) {
+      this.nProbabilidad = 0.4;
+    } else if (this.probabilidad === 1) {
+      this.nProbabilidad = 0;
+    }
+  }
+
+
+  calcularRiesgoLegal(): void {
+    this.calcularProbImp();
+    this._riesgoLegal = this.nProbabilidad * this.impactoCalculado;
+  }
+
+  descargarInforme() {
+    const resumen = {
+      probabilidad: this.probabilidad,
+      impactoCalculado: this.impactoCalculado,
+      valorCritico: this.valorCritico,
+      scoring: this.scoring,
+      riesgoLegal: this.riesgoLegal,
+      riesgoLegalA: this.riesgoLegalA,
+      riesgoLegalC: this.riesgoLegalC,
+      excedentes: this.excedentes,
+      impactoExc: this.impactoExc,
+      impactoExcA: this.impactoExcA,
+      impactoExcC: this.impactoExcC
+    };
+  
+    this.pdfGenerator.generarPDF(this.complianceData, resumen);
+  }
+  
+
+  
+  
+  descargarIncumplimientos() {
+    console.log('Descargando Incumplimientos...');
+    // Aquí puedes generar y descargar el archivo
   }
 
   get totalPuntaje(): number {
@@ -174,32 +232,27 @@ export class HomeComponent implements OnInit {
   }
 
   get riesgoLegal(): number {
-    return this._riesgoLegal;
+    return this.nProbabilidad === 0 ? 0 : this._riesgoLegal;
   }
 
   get riesgoLegalA(): number {
-    return this.calculateRiesgoLegalWithFactor(1.65);
+    return this.nProbabilidad === 0 ? 0.5 * this.impactoCalculado : this.calculateRiesgoLegalWithFactor(1.65);
   }
 
   get riesgoLegalC(): number {
-    return this.calculateRiesgoLegalWithFactor(2.33);
+    return this.nProbabilidad === 0 ? 0.5 * 2 * this.impactoCalculado : this.calculateRiesgoLegalWithFactor(2.33);
   }
 
-  private calculateRiesgoLegalWithFactor(factor: number): number {
-    const factorSqrt = Math.sqrt(this.complianceData.length);
-    return this._riesgoLegal + factor * (this._riesgoLegal / factorSqrt);
+  get impactoExc(): number {
+    return this.nProbabilidad === 0 ? 0 : this.riesgoLegal / this.excedentes * 100;
   }
 
-  calcularProbImp(): void {
-    this.nProbabilidad = this.probabilidad === 5 ? 1 :
-      this.probabilidad === 4 ? 0.8 :
-        this.probabilidad === 3 ? 0.6 :
-          this.probabilidad === 2 ? 0.4 : 0;
+  get impactoExcA(): number {
+    return this.nProbabilidad === 0 ? 0.5 * this.impactoCalculado / this.excedentes * 100 : this.riesgoLegalA / this.excedentes * 100;
   }
 
-  calcularRiesgoLegal(): void {
-    this.calcularProbImp();
-    this._riesgoLegal = this.nProbabilidad * this.impactoCalculado;
+  get impactoExcC(): number {
+    return this.nProbabilidad === 0 ? 0.5 * 2 * this.impactoCalculado / this.excedentes * 100 : 0.5 * 2 * this.riesgoLegalC / this.excedentes * 100;
   }
 
   navigateTo(route: string): void {

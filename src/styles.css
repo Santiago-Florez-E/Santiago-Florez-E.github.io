@@ -208,22 +208,57 @@
     text-align: center;
 }
 
+/* Contenedor de los botones PDF */
+.pdf-container {
+    display: flex;
+    align-items: center; /* Alinea los botones verticalmente */
+    gap: 10px; /* Espacio entre los botones */
+    justify-content: center; /* Asegura que estén alineados correctamente */
+}
+
+/* Botón PDF */
 .pdf-button {
     background-color: grey;
     color: #fff;
     border: none;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 20px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
 }
 
 .pdf-button.pdf-uploaded {
     background-color: #ff5d35ef;
     color: #24262d;
 }
+
+/* Botón Descargar PDF */
+.download-button {
+    color: white;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover del botón Descargar PDF */
+.download-button:hover {
+    background-color: #388e3c;
+    transform: scale(1.05);
+}
+
+/* Oculta el botón de descargar si no hay PDF disponible */
+.hidden {
+    display: none;
+}
+
+
+
 
 .btnSave {
     background-color: #24262d;

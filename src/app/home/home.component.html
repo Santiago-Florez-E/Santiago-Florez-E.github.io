@@ -11,6 +11,7 @@
   </nav>
 
   <div class="form-container">
+    <th>{{currentDate | date: 'EEEE, d \'de\' MMMM'}}</th>
     <!-- Tabla de probabilidad-impacto-valor critico- ETC -->
     <table class="form-table">
       <thead>
@@ -36,11 +37,10 @@
           <td class="number">$ {{ impactoCalculado | number:'1.0-0' }}</td>
 
           <td>
-            <input type="number" [(ngModel)]="valorCritico" min="0" max="100" 
-            (ngModelChange)="actualizarValorCritico()"
-            (keydown)="validarInput($event)"/>
+            <input type="number" [(ngModel)]="valorCritico" min="0" max="100" (ngModelChange)="actualizarValorCritico()"
+              (keydown)="validarInput($event)" />
           </td>
-          <td class="number" >{{scoring | number:'1.2-2'}}</td>
+          <td class="number">{{scoring | number:'1.2-2'}}</td>
           <td class="number" [ngClass]="{
             'low-compliance': cumplimientoTotal <= 20,
             'low-medium-compliance': cumplimientoTotal > 20 && cumplimientoTotal <= 40,
@@ -48,11 +48,15 @@
             'high-medium-compliance': cumplimientoTotal > 60 && cumplimientoTotal <= 80,
             'high-compliance': cumplimientoTotal > 80
             }">
-            {{cumplimientoTotal | number:'1.2-2'}}
+            {{ (cumplimientoTotal % 1 === 0) ? (cumplimientoTotal | number:'1.0-0') : (cumplimientoTotal |
+            number:'1.2-2') }}
           </td>
         </tr>
       </tbody>
     </table>
+
+    <button class="download-button" (click)="descargarInforme()">Descargar Resumen de Usuario</button>
+    <button class="download-button" (click)="descargarIncumplimientos()">Descargar Incumplimientos</button>
 
     <!-- Tabla de Escenarios -->
     <table class="form-table">
@@ -73,15 +77,15 @@
         </tr>
         <tr>
           <td>EXCEDENTES ÚLTIMO AÑO</td>
-          <td class="number">$ 18.960.015.000,00</td>
-          <td class="number">$ 18.960.015.000,00</td>
-          <td class="number">$ 18.960.015.000,00</td>
+          <td class="number">$ {{excedentes | number: '1.0-0'}}</td>
+          <td class="number">$ {{excedentes | number: '1.0-0'}}</td>
+          <td class="number">$ {{excedentes | number: '1.0-0'}}</td>
         </tr>
         <tr>
           <td>IMPACTO SOBRE EXCEDENTES</td>
-          <td class="number low-impact">1,108%</td>
-          <td class="number medium-impact">2,215%</td>
-          <td class="number high-impact">4,430%</td>
+          <td class="number low-impact">{{impactoExc | number: '1.2-2'}} %</td>
+          <td class="number medium-impact">{{impactoExcA | number: '1.2-2'}} %</td>
+          <td class="number high-impact">{{impactoExcC | number: '1.2-2'}} %</td>
         </tr>
       </tbody>
     </table>
@@ -90,7 +94,7 @@
     <div class="header-box">
       <h1>Reporte de Cumplimiento Legal</h1>
     </div>
-    
+
     <!-- Tabla de Riesgo Legal - Puntaje - ETC -->
     <table class="form-table">
       <thead>
