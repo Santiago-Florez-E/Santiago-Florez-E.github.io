@@ -16,6 +16,7 @@
     <table class="form-table">
       <thead>
         <tr>
+          <th>PROVISIÓN RECOMENDADA</th>
           <th>PROBABILIDAD</th>
           <th>IMPACTO</th>
           <th>Valor crítico</th>
@@ -25,6 +26,7 @@
       </thead>
       <tbody>
         <tr>
+          <td class="number">$ {{riesgoLegal | number:'1.0-0'}}</td>
           <td class="number" [ngClass]="{
             'low-compliance': probabilidad === 5,
             'low-medium-compliance': probabilidad === 4,
@@ -40,7 +42,13 @@
             <input type="number" [(ngModel)]="valorCritico" min="0" max="100" (ngModelChange)="actualizarValorCritico()"
               (keydown)="validarInput($event)" />
           </td>
-          <td class="number">{{scoring | number:'1.2-2'}}</td>
+          <td class="number" [ngClass]="{
+            'low-compliance': scoring <= 20,
+            'low-medium-compliance': scoring > 20 && scoring <= 40,
+            'medium-compliance': scoring > 40 && scoring <= 60,
+            'high-medium-compliance': scoring > 60 && scoring <= 80,
+            'high-compliance': scoring > 80
+            }">{{scoring | number:'1.2-2'}}</td>
           <td class="number" [ngClass]="{
             'low-compliance': cumplimientoTotal <= 20,
             'low-medium-compliance': cumplimientoTotal > 20 && cumplimientoTotal <= 40,
@@ -55,7 +63,8 @@
       </tbody>
     </table>
 
-    <button class="download-button" (click)="descargarInforme()">Descargar Resumen de Usuario</button>
+    <button class="download-button" (click)="descargarInforme()">Descargar Informe</button>
+    <button class="download-button" (click)="descargarMetodologia()">Descargar Metodología</button>
     <button class="download-button" (click)="descargarIncumplimientos()">Descargar Incumplimientos</button>
 
     <!-- Tabla de Escenarios -->
@@ -72,8 +81,8 @@
         <tr>
           <td>RIESGO LEGAL</td>
           <td class="number high-risk">$ {{riesgoLegal | number:'1.0-0'}}</td>
-          <td class="number high-risk">$ {{riesgoLegalA | number:'1.0-0'}}</td>
-          <td class="number high-risk">$ {{riesgoLegalC | number:'1.0-0'}}</td>
+          <td class="number high-risk">${{riesgoLegal | number:'1.0-0'}} - {{riesgoLegalA | number:'1.0-0'}}</td>
+          <td class="number high-risk">$ {{riesgoLegalA | number:'1.0-0'}} - {{riesgoLegalC | number:'1.0-0'}}</td>
         </tr>
         <tr>
           <td>EXCEDENTES ÚLTIMO AÑO</td>

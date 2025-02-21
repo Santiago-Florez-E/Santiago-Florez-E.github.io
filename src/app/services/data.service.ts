@@ -6,6 +6,7 @@ export interface SavedItems {
   items: number;
   preguntas: number;
   nivelCumplimiento: number;
+  questions: { text: string; compliance: string }[]; 
 }
 
 @Injectable({
@@ -16,10 +17,10 @@ export class DataService {
   private complianceData: { [key: string]: SavedItems[] } = {
     'capituloX': [],
     'otros': [],
-    'ddi':[],
-    'leyes':[],
-    'ros':[],
-    'sagrilaft':[]
+    'ddi': [],
+    'leyes': [],
+    'ros': [],
+    'sagrilaft': []
   };
 
   private totalCompliance: { [key: string]: number } = {
@@ -57,18 +58,28 @@ export class DataService {
     return this.totalCompliance[type] !== 0 || this.groupCount[type] !== 0 || this.questionCount[type] !== 0 || this.complianceData[type].length > 0;
   }
 
-
   /* ===============================
        Métodos para manejar complianceData
   =============================== */
 
-  //METODOS Incumplimiento del Capitulo X
-
   setComplianceData(type: string, data: SavedItems[]): void {
     this.complianceData[type] = data;
-    localStorage.setItem(`complianceData_${type}`, JSON.stringify(data));
-  }
 
+    //Recalcular totalCompliance, groupCount, y questionCount basados en los datos de SavedItems
+    this.totalCompliance[type] = data.reduce((sum, item) => sum + item.puntaje, 0);
+    this.groupCount[type] = data.reduce((sum, item) => sum + item.items, 0);
+    this.questionCount[type] = data.reduce((sum, item) => sum + item.preguntas, 0);
+
+    localStorage.setItem(`complianceData_${type}`, JSON.stringify(data));
+    localStorage.setItem(`totalCompliance_${type}`, this.totalCompliance[type].toString());
+    localStorage.setItem(`groupCount_${type}`, this.groupCount[type].toString());
+    localStorage.setItem(`questionCount_${type}`, this.questionCount[type].toString());
+  }
+  
+  getAllComplianceData(): { [key: string]: SavedItems[] } {
+    return this.complianceData;
+  }
+  
   getComplianceData(type: string): SavedItems[] {
     return this.complianceData[type];
   }
@@ -92,21 +103,20 @@ export class DataService {
   }
 
   setQuestionCount(type: string, count: number): void {
-    this.questionCount[type] = count;
     localStorage.setItem(`questionCount_${type}`, count.toString());
   }
 
   getQuestionCount(type: string): number {
     return this.questionCount[type];
   }
-
+  
   private loadDataFromLocalStorage(): void {
     ['capituloX', 'otros', 'ddi', 'leyes', 'ros', 'sagrilaft'].forEach(type => {
       const storedCompliance = localStorage.getItem(`totalCompliance_${type}`);
       const storedGroups = localStorage.getItem(`groupCount_${type}`);
       const storedQuestions = localStorage.getItem(`questionCount_${type}`);
       const storedData = localStorage.getItem(`complianceData_${type}`);
-
+  
       if (storedCompliance) {
         this.totalCompliance[type] = Number(storedCompliance);
       }

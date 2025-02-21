@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService } from '../../services/data.service';
+import { DataService, SavedItems } from '../../services/data.service'; // Añade SavedItems aquí
 
 @Component({
   selector: 'app-ddi',
@@ -8,14 +8,13 @@ import { DataService } from '../../services/data.service';
   styleUrls: ['./ddi.component.css']
 })
 export class DdiComponent implements OnInit {
-
-  originalCapituloData: any[] = []
+  originalCapituloData: any[] = [];
 
   /* ===============================
      Propiedades y Datos
      =============================== */
      
-  // donde la clave es una cadena y el valor es un número.
+  // Donde la clave es una cadena y el valor es un número.
   complianceMap: { [key: string]: number } = {};
 
   // Opciones del desplegable
@@ -110,12 +109,12 @@ export class DdiComponent implements OnInit {
      Métodos de Navegación y PDF
      =============================== */
 
-  constructor(private router: Router, private dataService: DataService) { }
+  constructor(private router: Router, private dataService: DataService) {}
 
-  //Al iniciar la pagina se aplica este metodo
+  // Al iniciar la página se aplica este método
   ngOnInit(): void {
     this.initializeComplianceMap();
-    this.loadComplianceData()
+    this.loadComplianceData();
 
     // Hacer una copia profunda de capituloData
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
@@ -134,7 +133,7 @@ export class DdiComponent implements OnInit {
     });
   }
 
-  //El metodo recorre cada grupo y pregunta, luego utiliza (getNumericValue) para obtener el valor numerico y lo almacena
+  // El método recorre cada grupo y pregunta, luego utiliza (getNumericValue) para obtener el valor numérico y lo almacena
   initializeComplianceMap(): void {
     this.capituloData.forEach((group, groupIndex) => {
       group.questions.forEach((question, questionIndex) => {
@@ -143,7 +142,6 @@ export class DdiComponent implements OnInit {
       });
     });
   }
-
 
   navigateTo(route: string): void {
     if (this.hasChanges()) {
@@ -253,19 +251,25 @@ export class DdiComponent implements OnInit {
 
   onSave(): void {
     const totalCompliance = this.calculateTotalCompliance();
-    const groupCount = this.countGroups(); // Contar los grupos
-    const questionCount = this.countTotalQuestions(); // Contar las preguntas
+    const groupCount = this.countGroups();
+    const questionCount = this.countTotalQuestions();
 
-    this.dataService.setTotalCompliance('ddi', totalCompliance);
-    this.dataService.setGroupCount('ddi', groupCount); // Almacenar la cantidad de grupos
-    this.dataService.setQuestionCount('ddi', questionCount); // Almacenar la cantidad de preguntas
+    const savedItem: SavedItems = {
+      riesgo: 'Incumplimientos en la Debida Diligencia',
+      puntaje: totalCompliance,
+      items: groupCount,
+      preguntas: questionCount,
+      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
+      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+    };
 
-    this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData)); // Guardar como nueva versión original
+    this.dataService.setComplianceData('ddi', [savedItem]);
 
-    this.router.navigate(['']); // Asegúrate de que la ruta sea correcta
+    this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
+    this.router.navigate(['']);
   }
 
-  //Verifica si hay cambias respecto a lo orignial
+  // Verifica si hay cambios respecto a lo original
   hasChanges(): boolean {
     return JSON.stringify(this.capituloData) !== JSON.stringify(this.originalCapituloData);
   }
@@ -282,4 +286,3 @@ export class DdiComponent implements OnInit {
     return totalQuestions;
   }
 }
-

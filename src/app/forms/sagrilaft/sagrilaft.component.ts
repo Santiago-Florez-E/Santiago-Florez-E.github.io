@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService } from '../../services/data.service';
+import { DataService, SavedItems } from '../../services/data.service'; // Añadimos SavedItems a la importación
 
 @Component({
   selector: 'app-sagrilaft',
@@ -8,8 +8,7 @@ import { DataService } from '../../services/data.service';
   styleUrls: ['./sagrilaft.component.css']
 })
 export class SagrilaftComponent implements OnInit {
-
-  originalCapituloData: any[] = []
+  originalCapituloData: any[] = [];
 
   /* ===============================
      Propiedades y Datos
@@ -96,9 +95,9 @@ export class SagrilaftComponent implements OnInit {
      Métodos de Navegación y PDF
      =============================== */
 
-  constructor(private router: Router, private dataService: DataService) { }
+  constructor(private router: Router, private dataService: DataService) {}
 
-  //Al iniciar la pagina se aplica este metodo
+  // Al iniciar la página se aplica este método
   ngOnInit(): void {
     this.initializeComplianceMap();
     this.loadComplianceData(); // Cargar datos desde localStorage
@@ -120,7 +119,7 @@ export class SagrilaftComponent implements OnInit {
     });
   }
 
-  //El metodo recorre cada grupo y pregunta, luego utiliza (getNumericValue) para obtener el valor numerico y lo almacena
+  // El método recorre cada grupo y pregunta, luego utiliza (getNumericValue) para obtener el valor numérico y lo almacena
   initializeComplianceMap(): void {
     this.capituloData.forEach((group, groupIndex) => {
       group.questions.forEach((question, questionIndex) => {
@@ -130,7 +129,6 @@ export class SagrilaftComponent implements OnInit {
       });
     });
   }
-
 
   // Navegar a otra ruta
   navigateTo(route: string): void {
@@ -244,16 +242,22 @@ export class SagrilaftComponent implements OnInit {
     const groupCount = this.countGroups(); // Contar los grupos
     const questionCount = this.countTotalQuestions(); // Contar las preguntas
 
-    this.dataService.setTotalCompliance('sagrilaft', totalCompliance);
-    this.dataService.setGroupCount('sagrilaft', groupCount); // Almacenar la cantidad de grupos
-    this.dataService.setQuestionCount('sagrilaft', questionCount); // Almacenar la cantidad de preguntas
+    const savedItem: SavedItems = {
+      riesgo: 'Incumplimientos en las Etapas del SAGRILAFT',
+      puntaje: totalCompliance,
+      items: groupCount,
+      preguntas: questionCount,
+      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
+      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+    };
+
+    this.dataService.setComplianceData('sagrilaft', [savedItem]);
 
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData)); // Guardar como nueva versión original
-
     this.router.navigate(['']); // Asegúrate de que la ruta sea correcta
   }
 
-  //Verifica si hay cambias respecto a lo orignial
+  // Verifica si hay cambios respecto a lo original
   hasChanges(): boolean {
     return JSON.stringify(this.capituloData) !== JSON.stringify(this.originalCapituloData);
   }

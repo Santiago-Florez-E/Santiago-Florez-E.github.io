@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService, SavedItems } from '../../services/data.service';
+import { DataService, SavedItems } from '../../services/data.service'; // Añadimos SavedItems a la importación
 
 @Component({
   selector: 'app-otros',
@@ -8,8 +8,7 @@ import { DataService, SavedItems } from '../../services/data.service';
   styleUrls: ['./otros.component.css']
 })
 export class OtrosComponent implements OnInit {
-
-  originalCapituloData: any[] = []
+  originalCapituloData: any[] = [];
 
   /* ===============================
      Propiedades y Datos
@@ -89,7 +88,7 @@ export class OtrosComponent implements OnInit {
     },
   ];
 
-  constructor(private router: Router, private dataService: DataService) { }
+  constructor(private router: Router, private dataService: DataService) {}
 
   ngOnInit(): void {
     this.initializeComplianceMap();
@@ -185,7 +184,7 @@ export class OtrosComponent implements OnInit {
     const key = `${group.groupTitle}_${index}`;
     this.complianceMap[key] = numericValue;
 
-    // Guardar en local Storage
+    // Guardar en localStorage
     const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
     storedData[key] = item.compliance; // Guardar el cumplimiento actual
     localStorage.setItem('complianceData', JSON.stringify(storedData));
@@ -209,16 +208,22 @@ export class OtrosComponent implements OnInit {
     const groupCount = this.countGroups(); // Contar los grupos
     const questionCount = this.countTotalQuestions(); // Contar las preguntas
 
-    this.dataService.setTotalCompliance('otros', totalCompliance);
-    this.dataService.setGroupCount('otros', groupCount); // Almacenar la cantidad de grupos
-    this.dataService.setQuestionCount('otros', questionCount); // Almacenar la cantidad de preguntas
+    const savedItem: SavedItems = {
+      riesgo: 'Otros incumplimientos detectados',
+      puntaje: totalCompliance,
+      items: groupCount,
+      preguntas: questionCount,
+      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
+      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+    };
+
+    this.dataService.setComplianceData('otros', [savedItem]);
 
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData)); // Guardar como nueva versión original
-
     this.router.navigate(['']); // Asegúrate de que la ruta sea correcta
   }
 
-  //Verifica si hay cambias respecto a lo orignial
+  // Verifica si hay cambios respecto a lo original
   hasChanges(): boolean {
     return JSON.stringify(this.capituloData) !== JSON.stringify(this.originalCapituloData);
   }
@@ -235,4 +240,3 @@ export class OtrosComponent implements OnInit {
     return totalQuestions;
   }
 }
-

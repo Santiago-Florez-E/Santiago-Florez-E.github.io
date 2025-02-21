@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService } from '../../services/data.service';
+import { DataService, SavedItems } from '../../services/data.service';
 
 @Component({
   selector: 'app-capitulo',
@@ -205,8 +205,6 @@ export class CapituloComponent implements OnInit {
     this.capituloData.forEach(group => {
       if (storedPDFData[group.groupTitle]) {
         group.pdfUploaded = true; // Marcar como subido
-        // Aquí podrías almacenar el base64 en una propiedad si necesitas mostrarlo
-        // group.pdfBase64 = storedPDFData[group.groupTitle];
       }
     });
   }
@@ -271,9 +269,6 @@ export class CapituloComponent implements OnInit {
     const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
     storedData[key] = item.compliance; // Guardar el cumplimiento actual
     localStorage.setItem('complianceData', JSON.stringify(storedData));
-
-    console.clear();
-    console.log('Estado actual de complianceMap:', this.complianceMap);
   }
 
   calculateTotalCompliance(): number {
@@ -288,16 +283,21 @@ export class CapituloComponent implements OnInit {
 
   onSave(): void {
     const totalCompliance = this.calculateTotalCompliance();
-    const groupCount = this.countGroups(); // Contar los grupos
-    const questionCount = this.countTotalQuestions(); // Contar las preguntas
-
-    this.dataService.setTotalCompliance('capituloX', totalCompliance);
-    this.dataService.setGroupCount('capituloX', groupCount); // Almacenar la cantidad de grupos
-    this.dataService.setQuestionCount('capituloX', questionCount); // Almacenar la cantidad de preguntas
-
-    this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData)); // Guardar como nueva versión original
-
-    this.router.navigate(['']); // Asegúrate de que la ruta sea correcta
+    const groupCount = this.countGroups();
+    const questionCount = this.countTotalQuestions();
+  
+    const savedItem: SavedItems = {
+      riesgo: 'Incumplimientos específicos del Capítulo X',
+      puntaje: totalCompliance,
+      items: groupCount,
+      preguntas: questionCount,
+      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
+      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+    };
+    this.dataService.setComplianceData('capituloX', [savedItem]);  
+    this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
+    this.router.navigate(['']);
+    
   }
 
   //Verifica si hay cambias respecto a lo orignial
