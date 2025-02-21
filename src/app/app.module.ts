@@ -11,6 +11,9 @@ import { RosComponent } from './forms/ros/ros.component';
 import { DdiComponent } from './forms/ddi/ddi.component';
 import { SagrilaftComponent } from './forms/sagrilaft/sagrilaft.component';
 import { LeyesComponent } from './forms/leyes/leyes.component';
+import * as am5 from '@amcharts/amcharts5';
+import * as am5percent from '@amcharts/amcharts5/percent';
+import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
 
 
 // Importa tus rutas definidas en app.routes.ts

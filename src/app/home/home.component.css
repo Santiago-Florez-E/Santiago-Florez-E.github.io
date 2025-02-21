@@ -12,3 +12,13 @@
   margin-bottom: 20px;
   background-color: green;
 }
+
+#chartDiv {
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 100%;
+  height: 400px;
+  min-height: 400px; /* Asegura una altura mínima */
+  overflow: auto; /* Permite scroll si el contenido excede el tamaño */
+}

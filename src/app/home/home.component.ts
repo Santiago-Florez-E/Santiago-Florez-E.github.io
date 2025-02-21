@@ -19,10 +19,11 @@ interface ComplianceItem {
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
+
 export class HomeComponent implements OnInit {
   currentDate = new Date();
   valorCritico = 90;
-  excedentes = 15_000_000_000;
+  excedentes = 10_000_000_000;
   salarioMinimo = 1_423_500;
   multa = 200;
   impactoCalculado = 0;
@@ -47,7 +48,6 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // CORREGIDO: Llamamos a calcularProvisiónRecomendada() antes de calcularRiesgoLegal()
     ['capituloX', 'ddi', 'leyes', 'ros', 'sagrilaft', 'otros'].forEach(type => {
       if (!this.dataService.hasData(type)) this.initializeMaxData();
     });
@@ -157,7 +157,6 @@ export class HomeComponent implements OnInit {
     }, 50);
   }
 
-  // CORREGIDO: Aseguramos que nProbabilidad sea 1 cuando probabilidad es 5
   calcularProbImp() {
     if (this.probabilidad === 5) this.nProbabilidad = 1; // Probabilidad 5 (alto riesgo) directamente
     else if (this.probabilidad === 4) this.nProbabilidad = 0.8;
@@ -234,13 +233,6 @@ export class HomeComponent implements OnInit {
     const total = this.complianceData.reduce((sum, i) => sum + i.nivelCumplimiento, 0);
     return this.complianceData.length ? Math.round(total / this.complianceData.length) : 0;
   }
-
-  get provisionRecomendada() { return this.riesgoLegalA*0.05; }
-  get probabilidadValue() { return this.probabilidad; }
-  get impactoValue() { return this.impactoCalculado; }
-  get valorCriticoValue() { return this.valorCritico; }
-  get scoringValue() { return this.scoring; }
-  get cumplimientoGlobal() { return this.cumplimientoTotal; }
 
   private getComplianceScore(compliance: string) { return { 'NO CUMPLE': 5, 'CUMPLIMIENTO BAJO': 4, 'CUMPLIMIENTO MODERADO': 3, 'CUMPLIMIENTO ALTO': 2, 'CUMPLIMIENTO TOTAL': 1 }[compliance.toUpperCase()] || 1; }
 }
