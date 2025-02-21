@@ -1,7 +1,6 @@
 /*Fuente 'Montserrat'*/
 @import url('https://fonts.googleapis.com/css?family=Montserrat:300,400,500,600,700,800,900&display=swap');
 
-
 .number {
     font-family: 'Montserrat', sans-serif !important;
     font-weight: 600 !important;
@@ -15,35 +14,35 @@
 .low-compliance {
     background-color: #a31818;
     color: #fff;
-    font-family: 'Montserrat',sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 900;
 }
 
 .low-medium-compliance {
     background-color: red;
     color: #fff;
-    font-family: 'Montserrat',sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 900;
 }
 
 .medium-compliance {
     background-color: orange;
     color: #24262d;
-    font-family: 'Montserrat',sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 900;
 }
 
 .high-medium-compliance {
     background-color: yellow;
     color: #24262d;
-    font-family: 'Montserrat',sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 900;
 }
 
 .high-compliance {
     background-color: green;
     color: #24262d;
-    font-family: 'Montserrat',sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-weight: 900;
 }
 /*Final colores porcentaje*/
@@ -60,7 +59,6 @@
     max-width: 1400px;
     margin: 0 auto;
 }
-
 
 /* Color principal botones #ff5d35ef*/
 /* Botón barra de navegación */
@@ -115,7 +113,6 @@
     font-size: 1rem;
     font-weight: 400;
 }
-
 
 /* Contenedor con borde alrededor del formulario */
 .form-container {
@@ -181,7 +178,6 @@
     font-weight: 400;
 }
 
-
 /* Fila de encabezado de cada grupo */
 .group-heading-row td {
     background-color: #eaeaea;
@@ -236,19 +232,27 @@
 
 /* Botón Descargar PDF */
 .download-button {
+    background-color: #4CAF50; /* Verde como en tu diseño */
     color: white;
     border: none;
-    padding: 10px 10px;
+    padding: 10px 20px;
     border-radius: 20px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s ease;
+    /* AJUSTADO: Añadimos margin-right para separar los botones */
+    margin-right: 20px; /* Espacio de 20px entre botones */
+}
+
+/* Aseguramos que el último botón no tenga margen derecho */
+.download-button:last-child {
+    margin-right: 0; /* Elimina el margen del último botón */
 }
 
 /* Hover del botón Descargar PDF */
 .download-button:hover {
-    background-color: #388e3c;
+    background-color: #388e3c; /* Verde más oscuro */
     transform: scale(1.05);
 }
 
@@ -256,9 +260,6 @@
 .hidden {
     display: none;
 }
-
-
-
 
 .btnSave {
     background-color: #24262d;

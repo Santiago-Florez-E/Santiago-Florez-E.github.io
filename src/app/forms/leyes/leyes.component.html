@@ -1,57 +1,58 @@
-<div class="leyes-container">
-    <!-- Barra de navegación (si la necesitas) -->
-    <nav class="button-bar">
-      <button (click)="navigateTo('/')">
-            DashBoard
-      </button>
-      <button  (click)="navigateTo('/incumplimiento-capitulo')">
-        Incumplimiento Del Capítulo X
-      </button>
-      <button  (click)="navigateTo('/otros-incumplimientos')">
-        Otros incumplimientos
-      </button>
-      <button (click)="navigateTo('/incumplimientos-ros')">
-        Incumplimientos ROS
-      </button>
-      <button (click)="navigateTo('/incumplimiento-ddi')">
-        Incumplimiento DDI
-      </button>
-      <button (click)="navigateTo('/etapas-sagrilaft')">
-        Etapas Sagrilaft
-      </button>
-      <button class="thisBtn" (click)="navigateTo('/violacion-leyes')">
-        Violación de leyes y regulación
-      </button>
-    </nav>
+<div class="capitulo-container">
+  <!-- Barra de navegación (si la necesitas) -->
+  <nav class="button-bar">
+    <button (click)="navigateTo('/')">
+      DashBoard
+    </button>
+    <button  (click)="navigateTo('/incumplimiento-capitulo')">
+      Incumplimiento Del Capítulo X
+    </button>
+    <button (click)="navigateTo('/otros-incumplimientos')">
+      Otros incumplimientos
+    </button>
+    <button (click)="navigateTo('/incumplimientos-ros')">
+      Incumplimientos ROS
+    </button>
+    <button (click)="navigateTo('/incumplimiento-ddi')">
+      Incumplimiento DDI
+    </button>
+    <button (click)="navigateTo('/etapas-sagrilaft')">
+      Etapas Sagrilaft
+    </button>
+    <button class="thisBtn" (click)="navigateTo('/violacion-leyes')">
+      Violación de leyes y regulación
+    </button>
+  </nav>
+
+  <div class="header-box">
+    <h1>Incumplimiento del Capitulo X:</h1>
+  </div>
   
-    <div class="header-box">
-      <h1>Razón del Incumplimiento</h1>
-    </div>
-    
-    <!-- Texto intermedio (lorem) -->
-    <div class="text-box">
-      <p>
-        La gestión del riesgo legal es crucial para evitar sanciones, litigios y pérdidas económicas o reputacionales en organizaciones. 
-        Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales
-      </p>
-    </div>
-    <div class="form-container">
-      <table class="form-table">
-        <thead>
-          <tr>
-            <th>Razón del Incumplimiento</th>
-            <th>Cumple</th>
-            <th>Acta/Evidencia</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Recorremos cada grupo -->
-          <ng-container *ngFor="let group of capituloData">
-            <!-- Fila de encabezado (Título + PDF) -->
-            <tr class="group-heading-row">
-              <td>{{ group.groupTitle }}</td>
-              <td></td>
-              <td class="pdf-cell">
+  <!-- Texto intermedio (lorem) -->
+  <div class="text-box">
+    <p>
+      La gestión del riesgo legal es crucial para evitar sanciones, litigios y pérdidas económicas o reputacionales en organizaciones. 
+      Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales
+    </p>
+  </div>
+  <div class="form-container">
+    <table class="form-table">
+      <thead>
+        <tr>
+          <th>Incumplimiento del Capítulo X</th>
+          <th>Cumple</th>
+          <th>Acta/Evidencia</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Recorremos cada grupo -->
+        <ng-container *ngFor="let group of capituloData">
+          <!-- Fila de encabezado (Título + PDF) -->
+          <tr class="group-heading-row">
+            <td>{{ group.groupTitle }}</td>
+            <td></td>
+            <td class="pdf-cell">
+              <div class="pdf-container">
                 <button
                   class="pdf-button"
                   [class.pdf-uploaded]="group.pdfUploaded"
@@ -66,35 +67,44 @@
                   (change)="onPDFUpload(group, pdfInput.files)"
                   hidden
                 />
-              </td>
-            </tr>
-  
-            <!-- Filas de preguntas (Pregunta | Cumple | Acta/Evidencia) -->
-            <tr *ngFor="let item of group.questions; let i = index">
-              <!-- Col 1: Pregunta -->
-              <td>{{ item.text }}</td>
-  
-              <!-- Col 2: donde está el dropdown pintado -->
-              <td class="compliance-cell">
-                <select
-                  [(ngModel)]="item.compliance"
-                  (ngModelChange)="onComplianceChange(item, group, i)"
-                  [ngStyle]="{'background-color': getColor(item.compliance)}"
-                  [ngClass]="{'white-text': item.compliance === 'NO CUMPLE' || item.compliance === 'CUMPLIMIENTO BAJO'}"
+                
+                <!-- Se muestra solo si 'group.pdfUploaded' es true -->
+                <button
+                  class="download-button"
+                  *ngIf="group.pdfUploaded"
+                  (click)="downloadPDF(group)"
                 >
-                  <option *ngFor="let option of complianceOptions" [value]="option">
-                    {{ option }}
-                  </option>
-                </select>
-              </td>
-  
-              <!-- Col 3: vacío  -->
-              <td></td>
-            </tr>
-          </ng-container>
-        </tbody>
-      </table>
-      <button  (click)="onSave()" class="btnSave">Guardar</button>
-    </div>
+                🔽
+                </button>
+              </div>
+            </td>            
+          </tr>
+
+          <!-- Filas de preguntas (Pregunta | Cumple | Acta/Evidencia) -->
+          <tr *ngFor="let item of group.questions; let i = index">
+            <!-- Col 1: Pregunta -->
+            <td>{{ item.text }}</td>
+
+            <!-- Col 2: donde está el dropdown pintado -->
+            <td class="compliance-cell">
+              <select
+                [(ngModel)]="item.compliance"
+                (ngModelChange)="onComplianceChange(item, group, i)"
+                [ngStyle]="{'background-color': getColor(item.compliance)}"
+                [ngClass]="{'white-text': item.compliance === 'NO CUMPLE' || item.compliance === 'CUMPLIMIENTO BAJO'}"
+              >
+                <option *ngFor="let option of complianceOptions" [value]="option">
+                  {{ option }}
+                </option>
+              </select>
+            </td>
+
+            <!-- Col 3: vacío  -->
+            <td></td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+    <button class="btnSave" (click)="onSave()">Guardar</button>
   </div>
-  
+</div>

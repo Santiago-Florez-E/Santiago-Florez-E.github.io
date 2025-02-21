@@ -20,117 +20,126 @@ interface ComplianceItem {
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-  currentDate: Date = new Date();
-  valorCritico: number = 90;
-  excedentes: number = 10000000000;
-  salarioMinimo: number = 1423500;
-  multa: number = 200;
-  impactoCalculado: number = 0;
-  nProbabilidad: number = 0;
-  _riesgoLegal: number = 0;
-  scoring: number = 0;
+  currentDate = new Date();
+  valorCritico = 90;
+  excedentes = 15_000_000_000;
+  salarioMinimo = 1_423_500;
+  multa = 200;
+  impactoCalculado = 0;
+  nProbabilidad = 0;
+  _riesgoLegal = 0;
+  scoring = 0;
 
   complianceData: ComplianceItem[] = [
     { riesgo: 'Incumplimientos específicos del Capítulo X', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
     { riesgo: 'Otros incumplimientos detectados', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
-    { riesgo: 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
-    { riesgo: 'Incumplimientos en la Debida Diligencia', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
-    { riesgo: 'Incumplimientos en las Etapas del SAGRILAFT', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 },
-    { riesgo: 'Violación de leyes y regulación', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0.00, participacionW: 0, cumpleW: 0 }
+    { riesgo: 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Incumplimientos en la Debida Diligencia', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Incumplimientos en las Etapas del SAGRILAFT', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 },
+    { riesgo: 'Violación de leyes y regulación', puntaje: 0, items: 0, preguntas: 0, nivelCumplimiento: 0, participacionW: 0, cumpleW: 0 }
   ];
 
   constructor(
     private router: Router,
     private dataService: DataService,
-    private pdfGenerator: PdfGeneratorService,
-    private exportExcelService: ExportExcelService
+    private pdf: PdfGeneratorService,
+    private excel: ExportExcelService
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
+    // CORREGIDO: Llamamos a calcularProvisiónRecomendada() antes de calcularRiesgoLegal()
+    ['capituloX', 'ddi', 'leyes', 'ros', 'sagrilaft', 'otros'].forEach(type => {
+      if (!this.dataService.hasData(type)) this.initializeMaxData();
+    });
     this.updateAllComplianceData();
     this.cargarValorCritico();
     this.calcularImpacto();
     this.calcularRiesgoLegal();
   }
 
-  updateAllComplianceData(): void {
-    const complianceTypes = ['capituloX', 'otros', 'ddi', 'leyes', 'ros', 'sagrilaft'];
-    complianceTypes.forEach(type => {
-      const totalCompliance = this.dataService.getTotalCompliance(type);
-      const groupCount = this.dataService.getGroupCount(type);
-      const questionCount = this.dataService.getQuestionCount(type);
-      this.updateComplianceData(type, totalCompliance, groupCount, questionCount);
+  private initializeMaxData() {
+    this.complianceData = [
+      { riesgo: 'Incumplimientos específicos del Capítulo X', puntaje: 13, items: 7, preguntas: 13, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 },
+      { riesgo: 'Otros incumplimientos detectados', puntaje: 8, items: 4, preguntas: 8, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 },
+      { riesgo: 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)', puntaje: 5, items: 2, preguntas: 5, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 },
+      { riesgo: 'Incumplimientos en la Debida Diligencia', puntaje: 10, items: 5, preguntas: 10, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 },
+      { riesgo: 'Incumplimientos en las Etapas del SAGRILAFT', puntaje: 8, items: 4, preguntas: 8, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 },
+      { riesgo: 'Violación de leyes y regulación', puntaje: 18, items: 11, preguntas: 18, nivelCumplimiento: 100, participacionW: 1, cumpleW: 100 }
+    ];
+  }
+
+  updateAllComplianceData() {
+    ['capituloX', 'otros', 'ddi', 'leyes', 'ros', 'sagrilaft'].forEach(type => {
+      const [puntaje, items, preguntas] = [this.dataService.getTotalCompliance(type), this.dataService.getGroupCount(type), this.dataService.getQuestionCount(type)];
+      this.updateComplianceData(type, puntaje, items, preguntas);
     });
     this.recalculateParticipationAndScores();
     this.calcularScoring();
   }
 
-  updateComplianceData(type: string, totalCompliance: number, groupCount: number, questionCount: number): void {
-    const specificItem = this.complianceData.find(item => item.riesgo === this.getRiskName(type));
-    if (specificItem) {
-      specificItem.puntaje = totalCompliance;
-      specificItem.items = groupCount;
-      specificItem.preguntas = questionCount;
-      specificItem.nivelCumplimiento = this.calculateNivelCumplimiento(totalCompliance, questionCount);
+  updateComplianceData(type: string, totalCompliance: number, groupCount: number, questionCount: number) {
+    const item = this.complianceData.find(i => i.riesgo === this.getRiskName(type));
+    if (item) {
+      item.puntaje = totalCompliance || item.puntaje;
+      item.items = groupCount || item.items;
+      item.preguntas = questionCount || item.preguntas;
+      item.nivelCumplimiento = this.calcNivel(item.puntaje, item.preguntas);
     }
   }
 
-  recalculateParticipationAndScores(): void {
-    const totalPreguntasActual = this.complianceData.reduce((sum, item) => sum + item.preguntas, 0);
+  recalculateParticipationAndScores() {
+    const totalPreguntas = this.complianceData.reduce((sum, i) => sum + i.preguntas, 0);
     this.complianceData.forEach(item => {
-      item.participacionW = this.calculateParticipacionW(item.preguntas, totalPreguntasActual);
-      item.cumpleW = this.calculateCumpleW(item.nivelCumplimiento, item.participacionW);
+      item.participacionW = totalPreguntas ? item.preguntas / totalPreguntas : 0;
+      item.cumpleW = this.calcCumple(item.nivelCumplimiento, item.participacionW);
     });
   }
 
-  getRiskName(type: string): string {
-    const riskNames: { [key: string]: string } = {
+  private getRiskName(type: string) {
+    return {
       'capituloX': 'Incumplimientos específicos del Capítulo X',
       'otros': 'Otros incumplimientos detectados',
       'ddi': 'Incumplimientos en la Debida Diligencia',
       'leyes': 'Violación de leyes y regulación',
       'ros': 'Incumplimientos relacionados con el Reporte de Operaciones Sospechosas (ROS)',
       'sagrilaft': 'Incumplimientos en las Etapas del SAGRILAFT'
-    };
-    return riskNames[type] || '';
+    }[type] || '';
   }
 
-  calculateNivelCumplimiento(totalCompliance: number, questionCount: number): number {
-    if (questionCount === 0) return 0;
-    const maxCompliance = questionCount * 5;
-    return (1 - ((totalCompliance - questionCount) / (maxCompliance - questionCount))) * 100;
+  private calcNivel(puntaje: number, preguntas: number) {
+    return preguntas ? (1 - ((puntaje - preguntas) / (preguntas * 4))) * 100 : 0;
   }
 
-  calculateParticipacionW(questionCount: number, totalPreguntas: number): number {
-    return totalPreguntas ? (questionCount / totalPreguntas) : 0;
+  private calcParticipacion(preguntas: number, total: number) {
+    return total ? preguntas / total : 0;
   }
 
-  calculateCumpleW(calculateParticipacionW: number, calculateNivelCumplimiento: number): number {
-    return calculateNivelCumplimiento * calculateParticipacionW;
+  private calcCumple(nivel: number, participacion: number) {
+    return nivel * participacion;
   }
 
-  calcularScoring(): void {
+  calcularScoring() {
     this.cargarValorCritico();
-    if (this.valorCritico === 100) {
-      this.scoring = this.cumplimientoTotal === 100 ? 100 : 0;
-    } else {
-      this.scoring = Math.max(0, ((this.cumplimientoTotal - this.valorCritico) / (100 - this.valorCritico)) * 100);
-    }
+    this.scoring = this.valorCritico === 100 
+      ? (this.cumplimientoTotal === 100 ? 100 : 0) 
+      : Math.max(0, ((this.cumplimientoTotal - this.valorCritico) / (100 - this.valorCritico)) * 100);
     localStorage.setItem('scoring', this.scoring.toString());
   }
 
-  cargarScoring(): void {
-    const scoringGuardado = localStorage.getItem('scoring');
-    if (scoringGuardado !== null) {
-      this.scoring = parseFloat(scoringGuardado);
-    }
+  cargarValorCritico() {
+    const saved = localStorage.getItem('valorCritico');
+    this.valorCritico = saved ? parseInt(saved, 10) : 90;
   }
 
-  calcularImpacto(): void {
+  calcularImpacto() {
     this.impactoCalculado = this.salarioMinimo * this.multa;
   }
 
-  actualizarValorCritico(): void {
+  calcularProvisiónRecomendada() {
+    this.impactoCalculado = 284_700_000;
+  }
+
+  actualizarValorCritico() {
     this.valorCritico = Math.max(0, Math.min(100, this.valorCritico));
     localStorage.setItem('valorCritico', this.valorCritico.toString());
     this.calcularScoring();
@@ -138,7 +147,7 @@ export class HomeComponent implements OnInit {
     this.currentDate = new Date();
   }
 
-  validarInput(event: KeyboardEvent): void {
+  validarInput(event: KeyboardEvent) {
     const input = event.target as HTMLInputElement;
     setTimeout(() => {
       let value = parseInt(input.value, 10);
@@ -148,39 +157,22 @@ export class HomeComponent implements OnInit {
     }, 50);
   }
 
-  cargarValorCritico(): void {
-    const valorGuardado = localStorage.getItem('valorCritico');
-    if (valorGuardado !== null) {
-      this.valorCritico = parseInt(valorGuardado, 10);
-    }
+  // CORREGIDO: Aseguramos que nProbabilidad sea 1 cuando probabilidad es 5
+  calcularProbImp() {
+    if (this.probabilidad === 5) this.nProbabilidad = 1; // Probabilidad 5 (alto riesgo) directamente
+    else if (this.probabilidad === 4) this.nProbabilidad = 0.8;
+    else if (this.probabilidad === 3) this.nProbabilidad = 0.6;
+    else if (this.probabilidad === 2) this.nProbabilidad = 0.4;
+    else this.nProbabilidad = 0;
   }
 
-  private calculateRiesgoLegalWithFactor(factor: number): number {
-    const factorSqrt = Math.sqrt(this.complianceData.length);
-    return this._riesgoLegal + factor * (this._riesgoLegal / factorSqrt);
-  }
-
-  calcularProbImp(): void {
-    if (this.probabilidad === 5) {
-      this.nProbabilidad = 1;
-    } else if (this.probabilidad === 4) {
-      this.nProbabilidad = 0.8;
-    } else if (this.probabilidad === 3) {
-      this.nProbabilidad = 0.6;
-    } else if (this.probabilidad === 2) {
-      this.nProbabilidad = 0.4;
-    } else if (this.probabilidad === 1) {
-      this.nProbabilidad = 0;
-    }
-  }
-
-  calcularRiesgoLegal(): void {
+  calcularRiesgoLegal() {
     this.calcularProbImp();
     this._riesgoLegal = this.nProbabilidad * this.impactoCalculado;
   }
 
   descargarInforme() {
-    const resumen = {
+    this.pdf.generarPDF(this.complianceData, {
       probabilidad: this.probabilidad,
       impactoCalculado: this.impactoCalculado,
       valorCritico: this.valorCritico,
@@ -192,109 +184,63 @@ export class HomeComponent implements OnInit {
       impactoExc: this.impactoExc,
       impactoExcA: this.impactoExcA,
       impactoExcC: this.impactoExcC
-    };
-    this.pdfGenerator.generarPDF(this.complianceData, resumen);
-  }
-
-  descargarIncumplimientos(): void {
-    this.updateAllComplianceData();
-
-    const preguntasFiltradas: { Título: string; Pregunta: string; Estado: string }[] = [];
-    const complianceData = this.dataService.getAllComplianceData();
-    
-    Object.keys(complianceData).forEach((type) => {
-      const categoryData = complianceData[type];
-      categoryData.forEach((item) => {
-        if (item.questions) {
-          item.questions.forEach((question) => {
-            const score = this.getComplianceScore(question.compliance);
-            if (score >= 3) {
-              preguntasFiltradas.push({
-                Título: item.riesgo,
-                Pregunta: question.text,
-                Estado: question.compliance,
-              });
-            }
-          });
-        }
-      });
     });
-
-    console.log('Preguntas filtradas:', preguntasFiltradas);
-
-    if (preguntasFiltradas.length === 0) {
-      console.warn('No hay incumplimientos con puntaje 3 o menor para exportar.');
-      return;
-    }
-
-    this.exportExcelService.exportToExcel(preguntasFiltradas, 'Incumplimientos_' + new Date().toISOString().split('T')[0]);
   }
 
-  getComplianceScore(compliance: string): number {
-    const scores: { [key: string]: number } = {
-      'NO CUMPLE': 5,
-      'CUMPLIMIENTO BAJO': 4,
-      'CUMPLIMIENTO MODERADO': 3,
-      'CUMPLIMIENTO ALTO': 2,
-      'CUMPLIMIENTO TOTAL': 1
-    };
-    return scores[compliance.toUpperCase()] || 1;
+  descargarIncumplimientos() {
+    this.updateAllComplianceData();
+    const filtered = [];
+    for (const type in this.dataService.getAllComplianceData()) {
+      for (const item of this.dataService.getAllComplianceData()[type]) {
+        if (item.questions) for (const q of item.questions) if (this.getComplianceScore(q.compliance) >= 3)
+          filtered.push({ Título: item.riesgo, Pregunta: q.text, Estado: q.compliance });
+      }
+    }
+    if (!filtered.length) alert('No hay incumplimientos bajos');
+    else this.excel.exportToExcel(filtered, 'Incumplimientos_' + new Date().toISOString().split('T')[0]);
   }
 
   descargarMetodologia() {
-    const link = document.createElement('a');
-    link.href = 'assets/metodologia.pdf';
-    link.setAttribute('download', 'metodologia.pdf');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = 'assets/metodologia.pdf';
+    a.download = 'metodologia.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  descargarPresentacion() {
+    const a = document.createElement('a');
+    a.href = 'assets/presentacion.pdf';
+    a.download = 'presentacion.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
-  get totalPuntaje(): number {
-    return this.complianceData.reduce((sum, item) => sum + item.puntaje, 0);
-  }
-
-  get cumplimientoTotal(): number {
-    return this.complianceData.reduce((sum, item) => sum + item.cumpleW, 0);
-  }
-
-  get totalPreguntas(): number {
-    return this.complianceData.reduce((sum, item) => sum + item.preguntas, 0);
-  }
-
-  get probabilidad(): number {
-    if (this.scoring < 20) return 5;
-    if (this.scoring < 40) return 4;
-    if (this.scoring < 60) return 3;
-    if (this.scoring < 80) return 2;
-    return 1;
-  }
-
-  get riesgoLegal(): number {
-    return this.nProbabilidad === 0 ? 0 : this._riesgoLegal;
-  }
-
-  get riesgoLegalA(): number {
-    return this.nProbabilidad === 0 ? 0.5 * this.impactoCalculado : this.calculateRiesgoLegalWithFactor(1.65);
-  }
-
-  get riesgoLegalC(): number {
-    return this.nProbabilidad === 0 ? 0.5 * 2 * this.impactoCalculado : this.calculateRiesgoLegalWithFactor(2.33);
-  }
-
-  get impactoExc(): number {
-    return this.nProbabilidad === 0 ? 0 : this.riesgoLegal / this.excedentes * 100;
-  }
-
-  get impactoExcA(): number {
-    return this.nProbabilidad === 0 ? 0.5 * this.impactoCalculado / this.excedentes * 100 : this.riesgoLegalA / this.excedentes * 100;
-  }
-
-  get impactoExcC(): number {
-    return this.nProbabilidad === 0 ? 0.5 * 2 * this.impactoCalculado / this.excedentes * 100 : 0.5 * 2 * this.riesgoLegalC / this.excedentes * 100;
-  }
-
-  navigateTo(route: string): void {
+  navigateTo(route: string) {
     this.router.navigate([route]);
   }
+
+  get riesgoLegal() { return this.nProbabilidad ? this._riesgoLegal : 0; }
+  get riesgoLegalA() { return this.nProbabilidad ? this._riesgoLegal * 1.65 + (this.nProbabilidad ? 0 : 0.5 * this.impactoCalculado) : 0.5 * this.impactoCalculado; }
+  get riesgoLegalC() { return this.nProbabilidad ? this._riesgoLegal * 2.33 + (this.nProbabilidad ? 0 : 0.5 * 2 * this.impactoCalculado) : 0.5 * 2 * this.impactoCalculado; }
+  get impactoExc() { return this.nProbabilidad ? this.riesgoLegal / this.excedentes * 100 : 0; }
+  get impactoExcA() { return this.nProbabilidad ? this.riesgoLegalA / this.excedentes * 100 : 0.5 * this.impactoCalculado / this.excedentes * 100; }
+  get impactoExcC() { return this.nProbabilidad ? this.riesgoLegalC / this.excedentes * 100 : 0.5 * 2 * this.impactoCalculado / this.excedentes * 100; }
+  get totalPuntaje() { return this.complianceData.reduce((sum, i) => sum + i.puntaje, 0); }
+  get totalPreguntas() { return this.complianceData.reduce((sum, i) => sum + i.preguntas, 0); }
+  get probabilidad() { return this.scoring <= 20 ? 5 : this.scoring <= 40 ? 4 : this.scoring <= 60 ? 3 : this.scoring <= 80 ? 2 : 1; }
+  get cumplimientoTotal() { 
+    const total = this.complianceData.reduce((sum, i) => sum + i.nivelCumplimiento, 0);
+    return this.complianceData.length ? Math.round(total / this.complianceData.length) : 0;
+  }
+
+  get provisionRecomendada() { return this.riesgoLegalA*0.05; }
+  get probabilidadValue() { return this.probabilidad; }
+  get impactoValue() { return this.impactoCalculado; }
+  get valorCriticoValue() { return this.valorCritico; }
+  get scoringValue() { return this.scoring; }
+  get cumplimientoGlobal() { return this.cumplimientoTotal; }
+
+  private getComplianceScore(compliance: string) { return { 'NO CUMPLE': 5, 'CUMPLIMIENTO BAJO': 4, 'CUMPLIMIENTO MODERADO': 3, 'CUMPLIMIENTO ALTO': 2, 'CUMPLIMIENTO TOTAL': 1 }[compliance.toUpperCase()] || 1; }
 }

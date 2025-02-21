@@ -190,6 +190,7 @@ export class LeyesComponent implements OnInit {
   ngOnInit(): void {
     this.initializeComplianceMap();
     this.loadComplianceData(); // Cargar datos desde localStorage
+    this.loadPDFData();
 
     // Hacer una copia profunda de capituloData
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
@@ -239,11 +240,47 @@ export class LeyesComponent implements OnInit {
     pdfInput.click();
   }
 
-  // Maneja la carga del PDF para un grupo (cambia el estado para cambiar el color del botón)
   onPDFUpload(group: any, files: FileList | null): void {
     if (files && files.length > 0) {
+      const file = files[0];
       group.pdfUploaded = true;
-      // Aquí se podría manejar el archivo (por ejemplo, subirlo a un servidor)
+  
+      // Leer el archivo como base64
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        const base64String = e.target.result;
+        // Guardar el PDF en localStorage
+        const storedData = JSON.parse(localStorage.getItem('pdfData') || '{}');
+        storedData[group.groupTitle] = base64String; // Guardar el PDF con el título del grupo como clave
+        localStorage.setItem('pdfData', JSON.stringify(storedData));
+      };
+      reader.readAsDataURL(file); // Leer el archivo como URL de datos
+    }
+  }
+
+  loadPDFData(): void {
+    const storedPDFData = JSON.parse(localStorage.getItem('pdfData') || '{}');
+    this.capituloData.forEach(group => {
+      if (storedPDFData[group.groupTitle]) {
+        group.pdfUploaded = true; // Marcar como subido
+      }
+    });
+  }
+
+  downloadPDF(group: any): void {
+    const storedPDFData = JSON.parse(localStorage.getItem('pdfData') || '{}');
+    const base64String = storedPDFData[group.groupTitle];
+  
+    if (base64String) {
+      // Crear un enlace temporal para descargar el archivo
+      const link = document.createElement('a');
+      link.href = base64String; // URL de datos
+      link.download = `${group.groupTitle}.pdf`; // Nombre del archivo
+      document.body.appendChild(link);
+      link.click(); // Simular clic para descargar
+      document.body.removeChild(link); // Limpiar el DOM
+    } else {
+      alert('No se ha subido ningún PDF para este grupo.');
     }
   }
 

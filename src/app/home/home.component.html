@@ -19,7 +19,7 @@
           <th>PROVISIÓN RECOMENDADA</th>
           <th>PROBABILIDAD</th>
           <th>IMPACTO</th>
-          <th>Valor crítico</th>
+          <th>VALOR CRITICO</th>
           <th>SCORING</th>
           <th>CUMPLIMIENTO GLOBAL</th>
         </tr>
@@ -64,6 +64,7 @@
     </table>
 
     <button class="download-button" (click)="descargarInforme()">Descargar Informe</button>
+    <button class="download-button" (click)="descargarPresentacion()">Descargar Presentación</button>
     <button class="download-button" (click)="descargarMetodologia()">Descargar Metodología</button>
     <button class="download-button" (click)="descargarIncumplimientos()">Descargar Incumplimientos</button>
 
@@ -80,9 +81,9 @@
       <tbody>
         <tr>
           <td>RIESGO LEGAL</td>
-          <td class="number high-risk">$ {{riesgoLegal | number:'1.0-0'}}</td>
-          <td class="number high-risk">${{riesgoLegal | number:'1.0-0'}} - {{riesgoLegalA | number:'1.0-0'}}</td>
-          <td class="number high-risk">$ {{riesgoLegalA | number:'1.0-0'}} - {{riesgoLegalC | number:'1.0-0'}}</td>
+          <td class="number">$ {{riesgoLegal | number:'1.0-0'}}</td>
+          <td class="number">${{riesgoLegal | number:'1.0-0'}} - {{riesgoLegalA | number:'1.0-0'}}</td>
+          <td class="number">$ {{riesgoLegalA | number:'1.0-0'}} - {{riesgoLegalC | number:'1.0-0'}}</td>
         </tr>
         <tr>
           <td>EXCEDENTES ÚLTIMO AÑO</td>
@@ -92,9 +93,27 @@
         </tr>
         <tr>
           <td>IMPACTO SOBRE EXCEDENTES</td>
-          <td class="number low-impact">{{impactoExc | number: '1.2-2'}} %</td>
-          <td class="number medium-impact">{{impactoExcA | number: '1.2-2'}} %</td>
-          <td class="number high-impact">{{impactoExcC | number: '1.2-2'}} %</td>
+          <td class="number" [ngClass]="{
+            'low-compliance': impactoExc >= 5,
+            'low-medium-compliance': impactoExc >= 3 && impactoExc < 5,
+            'medium-compliance': impactoExc >= 2 && impactoExc < 3,
+            'high-medium-compliance': impactoExc >= 1 && impactoExc < 2,
+            'high-compliance': impactoExc < 1
+            }">{{impactoExc | number: '1.2-2'}} %</td>
+          <td class="number" [ngClass]="{
+              'low-compliance': impactoExcA >= 5,
+              'low-medium-compliance': impactoExcA >= 3 && impactoExcA < 5,
+              'medium-compliance': impactoExcA >= 2 && impactoExcA < 3,
+              'high-medium-compliance': impactoExcA >= 1 && impactoExcA < 2,
+              'high-compliance': impactoExcA < 1
+              }">{{impactoExcA | number: '1.2-2'}} %</td>
+          <td class="number" [ngClass]="{
+                'low-compliance': impactoExcC >= 5,
+                'low-medium-compliance': impactoExcC >= 3 && impactoExcC < 5,
+                'medium-compliance': impactoExcC >= 2 && impactoExcC < 3,
+                'high-medium-compliance': impactoExcC >= 1 && impactoExcC < 2,
+                'high-compliance': impactoExcC < 1
+                }">{{impactoExcC | number: '1.2-2'}} %</td>
         </tr>
       </tbody>
     </table>

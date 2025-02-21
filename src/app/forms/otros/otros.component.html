@@ -1,10 +1,10 @@
-<div class="otros-container">
+<div class="capitulo-container">
   <!-- Barra de navegación (si la necesitas) -->
   <nav class="button-bar">
     <button (click)="navigateTo('/')">
       DashBoard
     </button>
-    <button (click)="navigateTo('/incumplimiento-capitulo')">
+    <button  (click)="navigateTo('/incumplimiento-capitulo')">
       Incumplimiento Del Capítulo X
     </button>
     <button class="thisBtn" (click)="navigateTo('/otros-incumplimientos')">
@@ -25,23 +25,21 @@
   </nav>
 
   <div class="header-box">
-    <h1>Otros Incumplimientos</h1>
+    <h1>Incumplimiento del Capitulo X:</h1>
   </div>
-
+  
   <!-- Texto intermedio (lorem) -->
   <div class="text-box">
     <p>
-      La gestión del riesgo legal es crucial para evitar sanciones, litigios y pérdidas económicas o reputacionales en
-      organizaciones.
-      Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera
-      y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales
+      La gestión del riesgo legal es crucial para evitar sanciones, litigios y pérdidas económicas o reputacionales en organizaciones. 
+      Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales
     </p>
   </div>
   <div class="form-container">
     <table class="form-table">
       <thead>
         <tr>
-          <th>Otros Incumplimientos</th>
+          <th>Incumplimiento del Capítulo X</th>
           <th>Cumple</th>
           <th>Acta/Evidencia</th>
         </tr>
@@ -54,12 +52,32 @@
             <td>{{ group.groupTitle }}</td>
             <td></td>
             <td class="pdf-cell">
-              <button class="pdf-button" [class.pdf-uploaded]="group.pdfUploaded" (click)="onSelectPDF(pdfInput)">
-                PDF
-              </button>
-              <input #pdfInput type="file" accept="application/pdf" (change)="onPDFUpload(group, pdfInput.files)"
-                hidden />
-            </td>
+              <div class="pdf-container">
+                <button
+                  class="pdf-button"
+                  [class.pdf-uploaded]="group.pdfUploaded"
+                  (click)="onSelectPDF(pdfInput)"
+                >
+                  PDF
+                </button>
+                <input
+                  #pdfInput
+                  type="file"
+                  accept="application/pdf"
+                  (change)="onPDFUpload(group, pdfInput.files)"
+                  hidden
+                />
+                
+                <!-- Se muestra solo si 'group.pdfUploaded' es true -->
+                <button
+                  class="download-button"
+                  *ngIf="group.pdfUploaded"
+                  (click)="downloadPDF(group)"
+                >
+                🔽
+                </button>
+              </div>
+            </td>            
           </tr>
 
           <!-- Filas de preguntas (Pregunta | Cumple | Acta/Evidencia) -->
@@ -69,9 +87,12 @@
 
             <!-- Col 2: donde está el dropdown pintado -->
             <td class="compliance-cell">
-              <select [(ngModel)]="item.compliance" (ngModelChange)="onComplianceChange(item, group, i)"
+              <select
+                [(ngModel)]="item.compliance"
+                (ngModelChange)="onComplianceChange(item, group, i)"
                 [ngStyle]="{'background-color': getColor(item.compliance)}"
-                [ngClass]="{'white-text': item.compliance === 'NO CUMPLE' || item.compliance === 'CUMPLIMIENTO BAJO'}">
+                [ngClass]="{'white-text': item.compliance === 'NO CUMPLE' || item.compliance === 'CUMPLIMIENTO BAJO'}"
+              >
                 <option *ngFor="let option of complianceOptions" [value]="option">
                   {{ option }}
                 </option>
