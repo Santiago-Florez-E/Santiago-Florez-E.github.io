@@ -1,10 +1,10 @@
 // src/app/app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';         
-import { RouterModule } from '@angular/router';      
+import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
-import { HomeComponent } from './home/home.component';  
+import { HomeComponent } from './home/home.component';
 import { CapituloComponent } from './forms/capitulo/capitulo.component';
 import { OtrosComponent } from './forms/otros/otros.component';
 import { RosComponent } from './forms/ros/ros.component';
@@ -14,10 +14,14 @@ import { LeyesComponent } from './forms/leyes/leyes.component';
 import * as am5 from '@amcharts/amcharts5';
 import * as am5percent from '@amcharts/amcharts5/percent';
 import am5themes_Animated from '@amcharts/amcharts5/themes/Animated';
+import {MatDialogModule} from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
 
 
 // Importa tus rutas definidas en app.routes.ts
 import { routes } from './app.routes';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { FileModalComponent } from './forms/file-modal.component';
 
 @NgModule({
   declarations: [
@@ -28,13 +32,19 @@ import { routes } from './app.routes';
     RosComponent,
     DdiComponent,
     SagrilaftComponent,
-    LeyesComponent
+    LeyesComponent,
+    FileModalComponent
   ],
   imports: [
     BrowserModule,
-    FormsModule,                  // <-- IMPORTANTE para que funcione ngModel
-    RouterModule.forRoot(routes)  // <-- Carga las rutas
+    FormsModule,
+    RouterModule.forRoot(routes),
+    MatDialogModule,
+    CommonModule
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  providers: [
+    provideAnimationsAsync()
+  ]
 })
 export class AppModule { }

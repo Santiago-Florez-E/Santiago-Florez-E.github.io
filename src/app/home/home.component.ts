@@ -45,7 +45,7 @@ export class HomeComponent implements OnInit {
     private dataService: DataService,
     private pdf: PdfGeneratorService,
     private excel: ExportExcelService
-  ) {}
+  ) { }
 
   ngOnInit() {
     ['capituloX', 'ddi', 'leyes', 'ros', 'sagrilaft', 'otros'].forEach(type => {
@@ -110,18 +110,14 @@ export class HomeComponent implements OnInit {
     return preguntas ? (1 - ((puntaje - preguntas) / (preguntas * 4))) * 100 : 0;
   }
 
-  private calcParticipacion(preguntas: number, total: number) {
-    return total ? preguntas / total : 0;
-  }
-
   private calcCumple(nivel: number, participacion: number) {
     return nivel * participacion;
   }
 
   calcularScoring() {
     this.cargarValorCritico();
-    this.scoring = this.valorCritico === 100 
-      ? (this.cumplimientoTotal === 100 ? 100 : 0) 
+    this.scoring = this.valorCritico === 100
+      ? (this.cumplimientoTotal === 100 ? 100 : 0)
       : Math.max(0, ((this.cumplimientoTotal - this.valorCritico) / (100 - this.valorCritico)) * 100);
     localStorage.setItem('scoring', this.scoring.toString());
   }
@@ -135,10 +131,8 @@ export class HomeComponent implements OnInit {
     this.impactoCalculado = this.salarioMinimo * this.multa;
   }
 
-  calcularProvisiónRecomendada() {
-    this.impactoCalculado = 284_700_000;
-  }
 
+  //Actualiza el valor crítico en tiempo real
   actualizarValorCritico() {
     this.valorCritico = Math.max(0, Math.min(100, this.valorCritico));
     localStorage.setItem('valorCritico', this.valorCritico.toString());
@@ -147,6 +141,7 @@ export class HomeComponent implements OnInit {
     this.currentDate = new Date();
   }
 
+  //Valida el iput en ValorCritico
   validarInput(event: KeyboardEvent) {
     const input = event.target as HTMLInputElement;
     setTimeout(() => {
@@ -158,7 +153,7 @@ export class HomeComponent implements OnInit {
   }
 
   calcularProbImp() {
-    if (this.probabilidad === 5) this.nProbabilidad = 1; // Probabilidad 5 (alto riesgo) directamente
+    if (this.probabilidad === 5) this.nProbabilidad = 1; 
     else if (this.probabilidad === 4) this.nProbabilidad = 0.8;
     else if (this.probabilidad === 3) this.nProbabilidad = 0.6;
     else if (this.probabilidad === 2) this.nProbabilidad = 0.4;
@@ -229,7 +224,7 @@ export class HomeComponent implements OnInit {
   get totalPuntaje() { return this.complianceData.reduce((sum, i) => sum + i.puntaje, 0); }
   get totalPreguntas() { return this.complianceData.reduce((sum, i) => sum + i.preguntas, 0); }
   get probabilidad() { return this.scoring <= 20 ? 5 : this.scoring <= 40 ? 4 : this.scoring <= 60 ? 3 : this.scoring <= 80 ? 2 : 1; }
-  get cumplimientoTotal() { 
+  get cumplimientoTotal() {
     const total = this.complianceData.reduce((sum, i) => sum + i.nivelCumplimiento, 0);
     return this.complianceData.length ? Math.round(total / this.complianceData.length) : 0;
   }

@@ -19,6 +19,6 @@
   border-radius: 8px;
   width: 100%;
   height: 400px;
-  min-height: 400px; /* Asegura una altura mínima */
-  overflow: auto; /* Permite scroll si el contenido excede el tamaño */
+  min-height: 400px; 
+  overflow: auto; 
 }
