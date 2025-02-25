@@ -7,7 +7,7 @@ import { FileModalComponent } from '../file-modal.component';
 export interface UploadedFile {
   name: string;
   content: string;
-  uploadDate: Date;
+  uploadDate: Date | string;
 }
 
 @Component({
@@ -46,7 +46,7 @@ export class CapituloComponent implements OnInit {
       uploadedFiles: [] as UploadedFile[],
       questions: [
         {
-          text: '¿Ha implementado la empresa todas las disposiciones del Capítulo X conforme a las normativas vigentes?',
+          text: '¿Cómo evalúas el nivel de cumplimiento de tu entidad en relación con la implementación de las disposiciones sugeridas en el Capítulo X, conforme a las normativas vigentes?',
           compliance: 'CUMPLIMIENTO TOTAL'
         }
       ]
@@ -58,7 +58,7 @@ export class CapituloComponent implements OnInit {
       uploadedFiles: [] as UploadedFile[],
       questions: [
         {
-          text: '¿Se han adoptado las medidas propuestas para la implementación del SAGRILAFT o del Régimen de Medidas Mínimas?',
+          text: '¿En qué medida consideras que la empresa está cumpliendo con los plazos establecidos para la implementación del SAGRILAFT o del Régimen de Medidas Mínimas?',
           compliance: 'CUMPLIMIENTO TOTAL'
         }
       ]
@@ -202,23 +202,20 @@ export class CapituloComponent implements OnInit {
   onFileUpload(group: any, files: FileList | null): void {
     if (files && files.length > 0) {
       if (!group.uploadedFiles) {
-        group.uploadedFiles = []; // Inicializar si no existe
+        group.uploadedFiles = [];
       }
 
       Array.from(files).forEach(file => {
         const reader = new FileReader();
         reader.onload = (e: any) => {
           const base64String = e.target.result;
-
-          const newFile = {
+          const newFile: UploadedFile = {
             name: file.name,
             content: base64String,
             uploadDate: new Date().toLocaleString()
           };
+          group.uploadedFiles.push(newFile);
 
-          group.uploadedFiles.push(newFile); // Guardar en la lista de archivos del grupo
-
-          // Guardar en localStorage
           const storedData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
           if (!storedData[group.groupTitle]) {
             storedData[group.groupTitle] = [];
@@ -229,19 +226,15 @@ export class CapituloComponent implements OnInit {
         reader.readAsDataURL(file);
       });
 
-      group.pdfUploaded = true; // Indicar que hay archivos subidos
+      group.pdfUploaded = true;
     }
   }
 
-  deleteFile(groupTitle: string, fileName: string): void {
-    // Buscar el grupo en capituloData usando el groupTitle
+  deleteFile(groupTitle: string, fileNames: string[]): void {
     const group = this.capituloData.find(g => g.groupTitle === groupTitle);
-
     if (group) {
-      // Filtrar el archivo que queremos eliminar de uploadedFiles
-      group.uploadedFiles = group.uploadedFiles.filter((file: UploadedFile) => file.name !== fileName);
-
-      // Actualizar el estado de pdfUploaded
+      // Filtrar todos los archivos cuyos nombres estén en fileNames
+      group.uploadedFiles = group.uploadedFiles.filter((file: UploadedFile) => !fileNames.includes(file.name));
       group.pdfUploaded = group.uploadedFiles.length > 0;
 
       // Actualizar localStorage
@@ -251,11 +244,9 @@ export class CapituloComponent implements OnInit {
         localStorage.setItem('uploadedFilesData', JSON.stringify(storedData));
       }
 
-      // Actualizar selectedGroup si está abierto
       if (this.selectedGroup && this.selectedGroup.groupTitle === groupTitle) {
         this.selectedGroup.uploadedFiles = group.uploadedFiles;
       }
-
     } else {
       console.error('Grupo no encontrado:', groupTitle);
     }
@@ -296,7 +287,7 @@ export class CapituloComponent implements OnInit {
     });
 
     // Escuchar el evento fileDeleted
-    dialogRef.componentInstance.fileDeleted.subscribe((result: { action: string; groupTitle: string; fileName: string }) => {
+    dialogRef.componentInstance.fileDeleted.subscribe((result: { action: string; groupTitle: string; fileName: string[] }) => {
       if (result.action === 'delete') {
         this.deleteFile(result.groupTitle, result.fileName);
       }

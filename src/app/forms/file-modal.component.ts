@@ -1,20 +1,31 @@
-import { Component, Inject, output, EventEmitter } from '@angular/core';
+import { Component, Inject, output } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { UploadedFile } from './capitulo/capitulo.component';
 
 @Component({
   selector: 'app-file-modal',
   template: `
-    <h1>Archivos Subidos - {{ data.groupTitle }}</h1>
+    <h2>Archivos Subidos - {{ data.groupTitle }}</h2>
     <ul>
       <li *ngFor="let file of data.uploadedFiles">
         <div>
+          <input type="checkbox" [checked]="isSelected(file.name)" (change)="toggleSelection(file.name)" />
           <a [href]="file.content" download="{{file.name}}">{{ file.name }}</a>
-          <div class="upload-date">Subido el: {{ file.uploadDate}}</div> <!-- Añade pipe date para formatear -->
+          <div class="upload-date">Subido el: {{ file.uploadDate }}</div>
         </div>
         <button (click)="deleteFile(file.name)" class="delete-button">Borrar</button>
       </li>
     </ul>
+    <button *ngIf="selectedFiles.length > 0" (click)="deleteSelectedFiles()" class="delete-selected-button">
+      Borrar Seleccionados ({{ selectedFiles.length }})
+    </button>
+
+    <div>
+  <label *ngIf="selectedFiles.length > 0" for="email">Enviar a:</label>
+  <input *ngIf="selectedFiles.length > 0" type="email" id="email" [(ngModel)]="email" placeholder="ejemplo@dominio.com" required />
+  <button *ngIf="selectedFiles.length > 0" (click)="sendEmail()" [disabled]="!isEmailValid()">Enviar</button>
+</div>
+
     <button (click)="close()">Cerrar</button>
 
     <style>
@@ -56,14 +67,35 @@ import { UploadedFile } from './capitulo/capitulo.component';
       .delete-button:hover {
         background-color: #cc0000;
       }
+      .delete-selected-button {
+        background-color: #ff4444;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .delete-selected-button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .delete-selected-button:hover:not(:disabled) {
+        background-color: #cc0000;
+      }
     </style>
   `,
 })
+
 export class FileModalComponent {
-  fileDeleted = new EventEmitter <{ action : string; groupTitle: string; fileName :string}>();
+  // Usar output() y definir fileName como string[]
+  fileDeleted = output<{ action: string; groupTitle: string; fileName: string[] }>();
+  selectedFiles: string[] = [];
+  email : string = '';
+
   constructor(
     public dialogRef: MatDialogRef<FileModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { groupTitle: string, uploadedFiles: UploadedFile[] }
+    @Inject(MAT_DIALOG_DATA) public data: { groupTitle: string; uploadedFiles: UploadedFile[] }
   ) {
     if (!this.data.uploadedFiles) {
       this.data.uploadedFiles = [];
@@ -71,11 +103,47 @@ export class FileModalComponent {
     console.log('Datos recibidos en el modal:', this.data);
   }
 
+  isSelected(fileName: string): boolean {
+    return this.selectedFiles.includes(fileName);
+  }
+
+  toggleSelection(fileName: string): void {
+    if (this.isSelected(fileName)) {
+      this.selectedFiles = this.selectedFiles.filter(name => name !== fileName);
+    } else {
+      this.selectedFiles.push(fileName);
+    }
+  }
+
   deleteFile(fileName: string): void {
-    // Emitir el evento en lugar de cerrar el modal
-    this.fileDeleted.emit({ action: 'delete', groupTitle: this.data.groupTitle, fileName });
-    // Opcional: Actualizar la lista localmente para reflejar la eliminación en la UI
+    // Emitir un array con un solo archivo para mantener consistencia
+    this.fileDeleted.emit({ action: 'delete', groupTitle: this.data.groupTitle, fileName: [fileName] });
     this.data.uploadedFiles = this.data.uploadedFiles.filter(file => file.name !== fileName);
+    this.selectedFiles = this.selectedFiles.filter(name => name !== fileName);
+  }
+
+  deleteSelectedFiles(): void {
+    if (this.selectedFiles.length > 0) {
+      this.fileDeleted.emit({ action: 'delete', groupTitle: this.data.groupTitle, fileName: this.selectedFiles });
+      this.data.uploadedFiles = this.data.uploadedFiles.filter(file => !this.selectedFiles.includes(file.name));
+      this.selectedFiles = [];
+    }
+  }
+
+  sendEmail(): void {
+    if (this.isEmailValid()) {
+      // Aquí puedes agregar la lógica para enviar el correo
+      console.log(`Enviando correo a: ${this.email} con archivos: ${this.selectedFiles.join(', ')}`);
+      alert(`Correo enviado a: ${this.email} con archivos: ${this.selectedFiles.join(', ')}`);
+      this.email = ''; // Limpiar el campo de entrada
+    } else {
+      alert('Por favor, ingrese un correo electrónico válido.');
+    }
+  }
+
+  isEmailValid(): boolean {
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Expresión regular para validar el
+    return emailPattern.test(this.email);
   }
 
   close(): void {
