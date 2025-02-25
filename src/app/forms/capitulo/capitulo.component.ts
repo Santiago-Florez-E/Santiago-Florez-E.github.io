@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService, SavedItems } from '../../services/data.service';
 import { MatDialog } from '@angular/material/dialog';
-import { FileModalComponent } from '../file-modal.component'; 
+import { FileModalComponent } from '../file-modal.component';
 
 export interface UploadedFile {
   name: string;
@@ -236,36 +236,26 @@ export class CapituloComponent implements OnInit {
   deleteFile(groupTitle: string, fileName: string): void {
     // Buscar el grupo en capituloData usando el groupTitle
     const group = this.capituloData.find(g => g.groupTitle === groupTitle);
-    
+
     if (group) {
       // Filtrar el archivo que queremos eliminar de uploadedFiles
       group.uploadedFiles = group.uploadedFiles.filter((file: UploadedFile) => file.name !== fileName);
-  
+
       // Actualizar el estado de pdfUploaded
       group.pdfUploaded = group.uploadedFiles.length > 0;
-  
+
       // Actualizar localStorage
       const storedData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
       if (storedData[groupTitle]) {
         storedData[groupTitle] = group.uploadedFiles;
         localStorage.setItem('uploadedFilesData', JSON.stringify(storedData));
       }
-  
+
       // Actualizar selectedGroup si está abierto
       if (this.selectedGroup && this.selectedGroup.groupTitle === groupTitle) {
         this.selectedGroup.uploadedFiles = group.uploadedFiles;
       }
-  
-      // Notificar a la ventana emergente para que se recargue o actualice
-      if (window.opener) {
-        // Intentar cerrar o recargar la ventana emergente
-        const popup = window.open('', '_self');
-        if (popup) {
-          popup.close(); // Cerrar la ventana emergente actual
-          // Volver a abrirla con los datos actualizados
-          this.openFiles(group);
-        }
-      }
+
     } else {
       console.error('Grupo no encontrado:', groupTitle);
     }
@@ -305,8 +295,9 @@ export class CapituloComponent implements OnInit {
       data: { groupTitle: group.groupTitle, uploadedFiles: group.uploadedFiles }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.action === 'delete') {
+    // Escuchar el evento fileDeleted
+    dialogRef.componentInstance.fileDeleted.subscribe((result: { action: string; groupTitle: string; fileName: string }) => {
+      if (result.action === 'delete') {
         this.deleteFile(result.groupTitle, result.fileName);
       }
     });

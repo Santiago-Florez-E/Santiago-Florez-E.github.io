@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, output, EventEmitter } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { UploadedFile } from './capitulo/capitulo.component';
 
@@ -60,6 +60,7 @@ import { UploadedFile } from './capitulo/capitulo.component';
   `,
 })
 export class FileModalComponent {
+  fileDeleted = new EventEmitter <{ action : string; groupTitle: string; fileName :string}>();
   constructor(
     public dialogRef: MatDialogRef<FileModalComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { groupTitle: string, uploadedFiles: UploadedFile[] }
@@ -71,7 +72,10 @@ export class FileModalComponent {
   }
 
   deleteFile(fileName: string): void {
-    this.dialogRef.close({ action: 'delete', groupTitle: this.data.groupTitle, fileName });
+    // Emitir el evento en lugar de cerrar el modal
+    this.fileDeleted.emit({ action: 'delete', groupTitle: this.data.groupTitle, fileName });
+    // Opcional: Actualizar la lista localmente para reflejar la eliminación en la UI
+    this.data.uploadedFiles = this.data.uploadedFiles.filter(file => file.name !== fileName);
   }
 
   close(): void {
