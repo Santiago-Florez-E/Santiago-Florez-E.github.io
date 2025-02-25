@@ -1,6 +1,6 @@
 import { Component, Inject, output } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { UploadedFile } from './capitulo/capitulo.component';
+import { UploadedFile } from '../models/models';
 
 @Component({
   selector: 'app-file-modal',

@@ -2,13 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService, SavedItems } from '../../services/data.service';
 import { MatDialog } from '@angular/material/dialog';
-import { FileModalComponent } from '../file-modal.component';
-
-export interface UploadedFile {
-  name: string;
-  content: string;
-  uploadDate: Date | string;
-}
+import { ComplianceService } from '../../services/compliance.service';
+import { Group, UploadedFile } from '../../models/models';
 
 @Component({
   selector: 'app-capitulo',
@@ -16,29 +11,9 @@ export interface UploadedFile {
   styleUrls: ['./capitulo.component.css']
 })
 export class CapituloComponent implements OnInit {
-
   selectedGroup: any = null;
-
-  originalCapituloData: any[] = []
-
-  /* ===============================
-     Propiedades y Datos
-     =============================== */
-
-  complianceMap: { [key: string]: number } = {};
-
-  complianceOptions: string[] = [
-    'NO CUMPLE',
-    'CUMPLIMIENTO BAJO',
-    'CUMPLIMIENTO MODERADO',
-    'CUMPLIMIENTO ALTO',
-    'CUMPLIMIENTO TOTAL'
-  ];
-
-
-
-  //   // Datos estructurados en grupos: cada grupo tiene un título, un estado de PDF y preguntas.
-  capituloData = [
+  originalCapituloData: Group[] = [];
+  capituloData: Group[] = [
     {
       groupTitle: '1. Sobre la aplicación del Capítulo X',
       pdfUploaded: false,
@@ -149,240 +124,97 @@ export class CapituloComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router, private dataService: DataService, public dialog: MatDialog) { }
+  constructor(
+    private router: Router,
+    private dataService: DataService,
+    public dialog: MatDialog,
+    public complianceService: ComplianceService
+  ) {}
 
   ngOnInit(): void {
-    this.initializeComplianceMap();
-    this.loadComplianceData(); // Cargar datos desde localStorage
-    this.loadPDFData(); // Cargar datos del PDF desde localStorage
+    this.complianceService.initializeComplianceMap(this.capituloData);
+    this.complianceService.loadComplianceData(this.capituloData);
+    this.complianceService.loadPDFData(this.capituloData);
+    this.complianceService.loadUploadedFilesData(this.capituloData);
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
   }
 
-  loadComplianceData(): void {
-    const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
-    this.capituloData.forEach((group) => {
-      group.questions.forEach((question, questionIndex) => {
-        const key = `${group.groupTitle}_${questionIndex}`;
-        if (storedData[key]) {
-          question.compliance = storedData[key]; // Asignar el cumplimiento guardado
-          this.complianceMap[key] = this.getNumericValue(question.compliance); // Actualizar complianceMap
-        }
-      });
-    });
-  }
-
-  initializeComplianceMap(): void {
-    this.capituloData.forEach((group) => {
-      group.questions.forEach((question, questionIndex) => {
-        const key = `${group.groupTitle}_${questionIndex}`;
-        this.complianceMap[key] = this.getNumericValue(question.compliance);
-      });
-    });
-  }
-
   navigateTo(route: string): void {
-    if (this.hasChanges()) {
-      const confirmacion = confirm('Es necesario guardar los cambios antes de salir. ¿Quieres guardar ahora?');
-
-      if (confirmacion) {
-        this.onSave();
-        this.router.navigate([route]);
-      }
-      // Si elige "Cancelar", simplemente no hace nada y se queda en la página
-    } else {
-      this.router.navigate([route]);
-    }
+    this.complianceService.navigateTo(route, this.capituloData, this.originalCapituloData);
   }
-
 
   onSelectPDF(pdfInput: HTMLInputElement): void {
-    pdfInput.click();
+    this.complianceService.onSelectPDF(pdfInput);
   }
 
-  onFileUpload(group: any, files: FileList | null): void {
-    if (files && files.length > 0) {
-      if (!group.uploadedFiles) {
-        group.uploadedFiles = [];
-      }
-
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          const base64String = e.target.result;
-          const newFile: UploadedFile = {
-            name: file.name,
-            content: base64String,
-            uploadDate: new Date().toLocaleString()
-          };
-          group.uploadedFiles.push(newFile);
-
-          const storedData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
-          if (!storedData[group.groupTitle]) {
-            storedData[group.groupTitle] = [];
-          }
-          storedData[group.groupTitle].push(newFile);
-          localStorage.setItem('uploadedFilesData', JSON.stringify(storedData));
-        };
-        reader.readAsDataURL(file);
-      });
-
-      group.pdfUploaded = true;
-    }
+  onFileUpload(group: Group, files: FileList | null): void {
+    this.complianceService.onFileUpload(group, files);
   }
 
   deleteFile(groupTitle: string, fileNames: string[]): void {
-    const group = this.capituloData.find(g => g.groupTitle === groupTitle);
-    if (group) {
-      // Filtrar todos los archivos cuyos nombres estén en fileNames
-      group.uploadedFiles = group.uploadedFiles.filter((file: UploadedFile) => !fileNames.includes(file.name));
-      group.pdfUploaded = group.uploadedFiles.length > 0;
-
-      // Actualizar localStorage
-      const storedData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
-      if (storedData[groupTitle]) {
-        storedData[groupTitle] = group.uploadedFiles;
-        localStorage.setItem('uploadedFilesData', JSON.stringify(storedData));
-      }
-
-      if (this.selectedGroup && this.selectedGroup.groupTitle === groupTitle) {
-        this.selectedGroup.uploadedFiles = group.uploadedFiles;
-      }
-    } else {
-      console.error('Grupo no encontrado:', groupTitle);
-    }
+    this.complianceService.deleteFile(groupTitle, fileNames, this.capituloData);
   }
 
   loadPDFData(): void {
-    const storedPDFData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
-    this.capituloData.forEach(group => {
-      if (storedPDFData[group.groupTitle]) {
-        group.uploadedFiles = storedPDFData[group.groupTitle];
-        group.pdfUploaded = group.uploadedFiles.length > 0;
-      }
-    });
+    this.complianceService.loadPDFData(this.capituloData);
   }
 
-  downloadFile(group: any, fileName: string): void {
-    const storedData = JSON.parse(localStorage.getItem('uploadedFilesData') || '{}');
-    const groupFiles = storedData[group.groupTitle] || [];
-
-    const file = groupFiles.find((f: any) => f.name === fileName);
-    if (file) {
-      const link = document.createElement('a');
-      link.href = file.content;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      alert('Archivo no encontrado.');
-    }
+  loadUploadedFilesData(): void {
+    this.complianceService.loadUploadedFilesData(this.capituloData);
   }
 
-  openFiles(group: any): void {
-    console.log('Datos enviados al modal:', { groupTitle: group.groupTitle, uploadedFiles: group.uploadedFiles });
-    const dialogRef = this.dialog.open(FileModalComponent, {
-      width: '600px',
-      data: { groupTitle: group.groupTitle, uploadedFiles: group.uploadedFiles }
-    });
-
-    // Escuchar el evento fileDeleted
-    dialogRef.componentInstance.fileDeleted.subscribe((result: { action: string; groupTitle: string; fileName: string[] }) => {
-      if (result.action === 'delete') {
-        this.deleteFile(result.groupTitle, result.fileName);
-      }
-    });
+  downloadFile(group: Group, fileName: string): void {
+    this.complianceService.downloadFile(group, fileName);
   }
 
-  getColor(compliance: string): string {
-    switch (compliance) {
-      case 'NO CUMPLE':
-        return '#a31818';
-      case 'CUMPLIMIENTO BAJO':
-        return 'red';
-      case 'CUMPLIMIENTO MODERADO':
-        return 'orange';
-      case 'CUMPLIMIENTO ALTO':
-        return 'yellow';
-      case 'CUMPLIMIENTO TOTAL':
-        return 'green';
-      default:
-        return 'green'; // Si no se ha seleccionado ninguna opción
-    }
+  openFiles(group: Group): void {
+    this.complianceService.openFiles(group, this.capituloData);
   }
 
-  getNumericValue(compliance: string): number {
-    switch (compliance) {
-      case 'NO CUMPLE':
-        return 5;
-      case 'CUMPLIMIENTO BAJO':
-        return 4;
-      case 'CUMPLIMIENTO MODERADO':
-        return 3;
-      case 'CUMPLIMIENTO ALTO':
-        return 2;
-      case 'CUMPLIMIENTO TOTAL':
-        return 1;
-      default:
-        return 1; // Si no se ha seleccionado ninguna opción
-    }
-  }
-
-  onComplianceChange(item: any, group: any, index: number): void {
-    const numericValue = this.getNumericValue(item.compliance);
-    const key = `${group.groupTitle}_${index}`;
-    this.complianceMap[key] = numericValue;
-
-    // Guardar en localStorage
-    const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
-    storedData[key] = item.compliance; // Guardar el cumplimiento actual
-    localStorage.setItem('complianceData', JSON.stringify(storedData));
+  onComplianceChange(item: any, group: Group, index: number): void {
+    this.complianceService.onComplianceChange(item, group, index, this.capituloData);
   }
 
   calculateTotalCompliance(): number {
-    let total = 0;
-    for (const key in this.complianceMap) {
-      if (this.complianceMap.hasOwnProperty(key)) {
-        total += this.complianceMap[key];
-      }
-    }
-    return total;
+    return this.complianceService.calculateTotalCompliance();
   }
 
   onSave(): void {
     const totalCompliance = this.calculateTotalCompliance();
-    const groupCount = this.countGroups();
-    const questionCount = this.countTotalQuestions();
+    const groupCount = this.complianceService.countGroups(this.capituloData);
+    const questionCount = this.complianceService.countTotalQuestions(this.capituloData);
 
     const savedItem: SavedItems = {
       riesgo: 'Incumplimientos específicos del Capítulo X',
       puntaje: totalCompliance,
       items: groupCount,
       preguntas: questionCount,
-      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
-      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+      nivelCumplimiento: 0,
+      questions: this.capituloData.flatMap(group => group.questions)
     };
+
     this.dataService.setComplianceData('capituloX', [savedItem]);
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
     this.router.navigate(['']);
-
   }
 
-  //Verifica si hay cambias respecto a lo orignial
   hasChanges(): boolean {
-    return JSON.stringify(this.capituloData) !== JSON.stringify(this.originalCapituloData);
+    return this.complianceService.hasChanges(this.capituloData, this.originalCapituloData);
   }
-
 
   countGroups(): number {
-    return this.capituloData.length;
+    return this.complianceService.countGroups(this.capituloData);
   }
 
   countTotalQuestions(): number {
-    let totalQuestions = 0;
-    this.capituloData.forEach(group => {
-      totalQuestions += group.questions.length; // Suma la cantidad de preguntas en cada grupo
-    });
-    return totalQuestions;
+    return this.complianceService.countTotalQuestions(this.capituloData);
+  }
+
+  getColor(compliance: string): string {
+    return this.complianceService.getColor(compliance);
+  }
+
+  getNumericValue(compliance: string): number {
+    return this.complianceService.getNumericValue(compliance);
   }
 }

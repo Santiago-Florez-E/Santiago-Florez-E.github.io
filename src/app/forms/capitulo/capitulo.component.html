@@ -1,27 +1,15 @@
 <div class="capitulo-container">
   <!-- Barra de navegación (si la necesitas) -->
   <nav class="button-bar">
-    <button (click)="navigateTo('/')">
-      DashBoard
-    </button>
+    <button (click)="navigateTo('/')">DashBoard</button>
     <button class="thisBtn" (click)="navigateTo('/incumplimiento-capitulo')">
       Incumplimiento Del Capítulo X
     </button>
-    <button (click)="navigateTo('/otros-incumplimientos')">
-      Otros incumplimientos
-    </button>
-    <button (click)="navigateTo('/incumplimientos-ros')">
-      Incumplimientos ROS
-    </button>
-    <button (click)="navigateTo('/incumplimiento-ddi')">
-      Incumplimiento DDI
-    </button>
-    <button (click)="navigateTo('/etapas-sagrilaft')">
-      Etapas Sagrilaft
-    </button>
-    <button (click)="navigateTo('/violacion-leyes')">
-      Violación de leyes y regulación
-    </button>
+    <button (click)="navigateTo('/otros-incumplimientos')">Otros incumplimientos</button>
+    <button (click)="navigateTo('/incumplimientos-ros')">Incumplimientos ROS</button>
+    <button (click)="navigateTo('/incumplimiento-ddi')">Incumplimiento DDI</button>
+    <button (click)="navigateTo('/etapas-sagrilaft')">Etapas Sagrilaft</button>
+    <button (click)="navigateTo('/violacion-leyes')">Violación de leyes y regulación</button>
   </nav>
 
   <div class="header-box">
@@ -32,9 +20,8 @@
   <div class="text-box">
     <p>
       La gestión del riesgo legal es crucial para evitar sanciones, litigios y pérdidas económicas o reputacionales en
-      organizaciones.
-      Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera
-      y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales
+      organizaciones. Tiene el fin de asegurar el cumplimiento normativo en LA/FT/FPADM (SAGRILAFT), proteger la estabilidad financiera
+      y reputacional, y promover un modelo proactivo y preventivo frente a riesgos legales.
     </p>
   </div>
   <div class="form-container">
@@ -65,19 +52,11 @@
                   (change)="onFileUpload(group, fileInput.files)" 
                   multiple
                   hidden />
-
-                <!-- <div *ngIf="group.uploadedFiles && group.uploadedFiles.length > 0">
-                  <div *ngFor="let file of group.uploadedFiles">
-                    <button class="download-button" (click)="downloadFile(group, file.name)">
-                      🔽 {{ file.name }}
-                    </button>
-                  </div>
-                </div> -->
-
-
               </div>
             </td>
-            <button (click)="openFiles(group)">Gestionar</button>
+            <td>
+              <button (click)="openFiles(group)">Gestionar</button>
+            </td>
           </tr>
 
           <!-- Filas de preguntas (Pregunta | Cumple | Acta/Evidencia) -->
@@ -90,13 +69,13 @@
               <select [(ngModel)]="item.compliance" (ngModelChange)="onComplianceChange(item, group, i)"
                 [ngStyle]="{'background-color': getColor(item.compliance)}"
                 [ngClass]="{'white-text': item.compliance === 'NO CUMPLE' || item.compliance === 'CUMPLIMIENTO BAJO'}">
-                <option *ngFor="let option of complianceOptions" [value]="option">
+                <option *ngFor="let option of complianceService.complianceOptions" [value]="option">
                   {{ option }}
                 </option>
               </select>
             </td>
 
-            <!-- Col 3: vacío  -->
+            <!-- Col 3: vacío -->
             <td></td>
           </tr>
         </ng-container>

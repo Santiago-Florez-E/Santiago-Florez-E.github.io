@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService, SavedItems } from '../../services/data.service'; // Añadimos SavedItems a la importación
+import { DataService, SavedItems } from '../../services/data.service'; 
 
 @Component({
   selector: 'app-leyes',

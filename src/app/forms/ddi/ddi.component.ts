@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { DataService, SavedItems } from '../../services/data.service'; // Añade SavedItems aquí
+import { DataService, SavedItems } from '../../services/data.service';
+import { MatDialog } from '@angular/material/dialog';
+import { ComplianceService } from '../../services/compliance.service';
+import { Group, UploadedFile } from '../../models/models';
 
 @Component({
   selector: 'app-ddi',
@@ -8,30 +11,14 @@ import { DataService, SavedItems } from '../../services/data.service'; // Añade
   styleUrls: ['./ddi.component.css']
 })
 export class DdiComponent implements OnInit {
-  originalCapituloData: any[] = [];
-
-  /* ===============================
-     Propiedades y Datos
-     =============================== */
-     
-  // Donde la clave es una cadena y el valor es un número.
-  complianceMap: { [key: string]: number } = {};
-
-  // Opciones del desplegable
-  complianceOptions: string[] = [
-    'NO CUMPLE',
-    'CUMPLIMIENTO BAJO',
-    'CUMPLIMIENTO MODERADO',
-    'CUMPLIMIENTO ALTO',
-    'CUMPLIMIENTO TOTAL'
-  ];
-
-  // Datos estructurados en grupos: cada grupo tiene un título, un estado de PDF y preguntas.
-  capituloData = [
+  selectedGroup: any = null;
+  originalCapituloData: Group[] = [];
+  capituloData: Group[] = [
     {
       groupTitle: '1. Verificación de identidad de contrapartes',
       pdfUploaded: false,
       currentCompliance: '',
+      uploadedFiles: [] as UploadedFile[],
       questions: [
         {
           text: '¿Verifica la empresa la identidad de las contrapartes antes de iniciar cualquier relación comercial?',
@@ -47,6 +34,7 @@ export class DdiComponent implements OnInit {
       groupTitle: '2. Aprobación para vinculación de Personas Expuestas Políticamente (PEP)',
       pdfUploaded: false,
       currentCompliance: '',
+      uploadedFiles: [] as UploadedFile[],
       questions: [
         {
           text: '¿Obtiene la empresa la aprobación de la alta gerencia antes de vincular a Personas Expuestas Políticamente (PEP)?',
@@ -62,6 +50,7 @@ export class DdiComponent implements OnInit {
       groupTitle: '3. Establecimiento del origen de los recursos de las contrapartes',
       pdfUploaded: false,
       currentCompliance: '',
+      uploadedFiles: [] as UploadedFile[],
       questions: [
         {
           text: '¿Realiza la empresa un análisis para establecer el origen de los recursos de las contrapartes antes de iniciar relaciones comerciales?',
@@ -77,6 +66,7 @@ export class DdiComponent implements OnInit {
       groupTitle: '4. Monitoreo continuo e intensificado',
       pdfUploaded: false,
       currentCompliance: '',
+      uploadedFiles: [] as UploadedFile[],
       questions: [
         {
           text: '¿Realiza la empresa un monitoreo continuo e intensificado de las relaciones contractuales, especialmente con contrapartes de mayor riesgo?',
@@ -92,6 +82,7 @@ export class DdiComponent implements OnInit {
       groupTitle: '5. Revisión de países de mayor riesgo en los listados del GAFI',
       pdfUploaded: false,
       currentCompliance: '',
+      uploadedFiles: [] as UploadedFile[],
       questions: [
         {
           text: '¿Revisa la empresa de manera permanente los países de mayor riesgo incluidos en los listados del GAFI?',
@@ -105,221 +96,106 @@ export class DdiComponent implements OnInit {
     }
   ];
 
-  /* ===============================
-     Métodos de Navegación y PDF
-     =============================== */
+  // Exponer complianceOptions como propiedad pública (si no usas complianceService directamente en el template)
+  get complianceOptions(): string[] {
+    return this.complianceService.complianceOptions;
+  }
 
-  constructor(private router: Router, private dataService: DataService) {}
+  constructor(
+    private router: Router,
+    private dataService: DataService,
+    public dialog: MatDialog, // Inyectar MatDialog para FileModalComponent
+    public complianceService: ComplianceService // Inyectar ComplianceService
+  ) {}
 
-  // Al iniciar la página se aplica este método
   ngOnInit(): void {
-    this.initializeComplianceMap();
-    this.loadComplianceData();
-    this.loadPDFData();
-
-    // Hacer una copia profunda de capituloData
+    this.complianceService.initializeComplianceMap(this.capituloData);
+    this.complianceService.loadComplianceData(this.capituloData);
+    this.complianceService.loadPDFData(this.capituloData);
+    this.complianceService.loadUploadedFilesData(this.capituloData);
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
   }
 
-  loadComplianceData(): void {
-    const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
-    this.capituloData.forEach((group, groupIndex) => {
-      group.questions.forEach((question, questionIndex) => {
-        const key = `${group.groupTitle}_${questionIndex}`;
-        if (storedData[key]) {
-          question.compliance = storedData[key]; // Asignar el cumplimiento guardado
-          this.complianceMap[key] = this.getNumericValue(question.compliance); // Actualizar complianceMap
-        }
-      });
-    });
-  }
-
-  // El método recorre cada grupo y pregunta, luego utiliza (getNumericValue) para obtener el valor numérico y lo almacena
-  initializeComplianceMap(): void {
-    this.capituloData.forEach((group, groupIndex) => {
-      group.questions.forEach((question, questionIndex) => {
-        const key = `${group.groupTitle}_${questionIndex}`;
-        this.complianceMap[key] = this.getNumericValue(question.compliance);
-      });
-    });
-  }
-
   navigateTo(route: string): void {
-    if (this.hasChanges()) {
-      const confirmacion = confirm('Es necesario guardar los cambios antes de salir. ¿Quieres guardar ahora?');
-      
-      if (confirmacion) {
-        this.onSave();
-        this.router.navigate([route]); 
-      } 
-      // Si elige "Cancelar", simplemente no hace nada y se queda en la página
-    } else {
-      this.router.navigate([route]); 
-    }
+    this.complianceService.navigateTo(route, this.capituloData, this.originalCapituloData);
   }
 
-  // Abre el diálogo para seleccionar un archivo PDF
   onSelectPDF(pdfInput: HTMLInputElement): void {
-    pdfInput.click();
+    this.complianceService.onSelectPDF(pdfInput);
   }
 
-  onPDFUpload(group: any, files: FileList | null): void {
-    if (files && files.length > 0) {
-      const file = files[0];
-      group.pdfUploaded = true;
-  
-      // Leer el archivo como base64
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        const base64String = e.target.result;
-        // Guardar el PDF en localStorage
-        const storedData = JSON.parse(localStorage.getItem('pdfData') || '{}');
-        storedData[group.groupTitle] = base64String; // Guardar el PDF con el título del grupo como clave
-        localStorage.setItem('pdfData', JSON.stringify(storedData));
-      };
-      reader.readAsDataURL(file); // Leer el archivo como URL de datos
-    }
+  onFileUpload(group: Group, files: FileList | null): void {
+    this.complianceService.onFileUpload(group, files);
+  }
+
+  deleteFile(groupTitle: string, fileNames: string[]): void {
+    this.complianceService.deleteFile(groupTitle, fileNames, this.capituloData);
   }
 
   loadPDFData(): void {
-    const storedPDFData = JSON.parse(localStorage.getItem('pdfData') || '{}');
-    this.capituloData.forEach(group => {
-      if (storedPDFData[group.groupTitle]) {
-        group.pdfUploaded = true; // Marcar como subido
-      }
-    });
+    this.complianceService.loadPDFData(this.capituloData);
   }
 
-  downloadPDF(group: any): void {
-    const storedPDFData = JSON.parse(localStorage.getItem('pdfData') || '{}');
-    const base64String = storedPDFData[group.groupTitle];
-  
-    if (base64String) {
-      // Crear un enlace temporal para descargar el archivo
-      const link = document.createElement('a');
-      link.href = base64String; // URL de datos
-      link.download = `${group.groupTitle}.pdf`; // Nombre del archivo
-      document.body.appendChild(link);
-      link.click(); // Simular clic para descargar
-      document.body.removeChild(link); // Limpiar el DOM
-    } else {
-      alert('No se ha subido ningún PDF para este grupo.');
-    }
+  loadUploadedFilesData(): void {
+    this.complianceService.loadUploadedFilesData(this.capituloData);
   }
 
-  /* ===============================
-     Funciones de Ayuda para el Cumplimiento
-     =============================== */
-
-  /**
-   * Devuelve el color que se usará según la opción de cumplimiento seleccionada.
-   * "NO CUMPLE" → rojo, "CUMPLIMIENTO BAJO" → naranja,
-   * "CUMPLIMIENTO MODERADO" → amarillo, "CUMPLIMIENTO ALTO" → yellowgreen,
-   * "CUMPLIMIENTO TOTAL" → verde.
-   */
-  getColor(compliance: string): string {
-    switch (compliance) {
-      case 'NO CUMPLE':
-        return '#a31818';
-      case 'CUMPLIMIENTO BAJO':
-        return 'red';
-      case 'CUMPLIMIENTO MODERADO':
-        return 'orange';
-      case 'CUMPLIMIENTO ALTO':
-        return 'yellow';
-      case 'CUMPLIMIENTO TOTAL':
-        return 'green';
-      default:
-        return 'green'; // Si no se ha seleccionado ninguna opción
-    }
+  downloadPDF(group: Group): void {
+    this.complianceService.downloadPDF(group);
   }
 
-  /**
-   * Devuelve un valor numérico según la opción de cumplimiento:
-   * "NO CUMPLE" → 5, "CUMPLIMIENTO BAJO" → 4,
-   * "CUMPLIMIENTO MODERADO" → 3, "CUMPLIMIENTO ALTO" → 2,
-   * "CUMPLIMIENTO TOTAL" → 1.
-   */
-  getNumericValue(compliance: string): number {
-    switch (compliance) {
-      case 'NO CUMPLE':
-        return 5;
-      case 'CUMPLIMIENTO BAJO':
-        return 4;
-      case 'CUMPLIMIENTO MODERADO':
-        return 3;
-      case 'CUMPLIMIENTO ALTO':
-        return 2;
-      case 'CUMPLIMIENTO TOTAL':
-        return 1;
-      default:
-        return 1; // Si no se ha seleccionado ninguna opción
-    }
+  downloadFile(group: Group, fileName: string): void {
+    this.complianceService.downloadFile(group, fileName);
   }
 
-  /**
-   * Cada vez que cambia el valor del select:
-   * 1) Se calcula y guarda el valor numérico en complianceMap.
-   * 2) Se imprime en la consola el estado actual de complianceMap.
-   */
-  onComplianceChange(item: any, group: any, index: number): void {
-    const numericValue = this.getNumericValue(item.compliance);
-    const key = `${group.groupTitle}_${index}`;
-    this.complianceMap[key] = numericValue;
+  openFiles(group: Group): void {
+    this.complianceService.openFiles(group, this.capituloData);
+  }
 
-    // Guardar en localStorage
-    const storedData = JSON.parse(localStorage.getItem('complianceData') || '{}');
-    storedData[key] = item.compliance; // Guardar el cumplimiento actual
-    localStorage.setItem('complianceData', JSON.stringify(storedData));
-
-    console.clear();
-    console.log('Estado actual de complianceMap:', this.complianceMap);
+  onComplianceChange(item: any, group: Group, index: number): void {
+    this.complianceService.onComplianceChange(item, group, index, this.capituloData);
   }
 
   calculateTotalCompliance(): number {
-    let total = 0;
-    for (const key in this.complianceMap) {
-      if (this.complianceMap.hasOwnProperty(key)) {
-        total += this.complianceMap[key];
-      }
-    }
-    return total;
+    return this.complianceService.calculateTotalCompliance();
   }
 
   onSave(): void {
     const totalCompliance = this.calculateTotalCompliance();
-    const groupCount = this.countGroups();
-    const questionCount = this.countTotalQuestions();
+    const groupCount = this.complianceService.countGroups(this.capituloData);
+    const questionCount = this.complianceService.countTotalQuestions(this.capituloData);
 
     const savedItem: SavedItems = {
       riesgo: 'Incumplimientos en la Debida Diligencia',
       puntaje: totalCompliance,
       items: groupCount,
       preguntas: questionCount,
-      nivelCumplimiento: 0, // Puedes calcularlo si lo necesitas
-      questions: this.capituloData.flatMap(group => group.questions) // Todas las preguntas
+      nivelCumplimiento: 0,
+      questions: this.capituloData.flatMap(group => group.questions)
     };
 
     this.dataService.setComplianceData('ddi', [savedItem]);
-
     this.originalCapituloData = JSON.parse(JSON.stringify(this.capituloData));
     this.router.navigate(['']);
   }
 
-  // Verifica si hay cambios respecto a lo original
   hasChanges(): boolean {
-    return JSON.stringify(this.capituloData) !== JSON.stringify(this.originalCapituloData);
+    return this.complianceService.hasChanges(this.capituloData, this.originalCapituloData);
   }
 
   countGroups(): number {
-    return this.capituloData.length;
+    return this.complianceService.countGroups(this.capituloData);
   }
 
   countTotalQuestions(): number {
-    let totalQuestions = 0;
-    this.capituloData.forEach(group => {
-      totalQuestions += group.questions.length; // Suma la cantidad de preguntas en cada grupo
-    });
-    return totalQuestions;
+    return this.complianceService.countTotalQuestions(this.capituloData);
+  }
+
+  getColor(compliance: string): string {
+    return this.complianceService.getColor(compliance);
+  }
+
+  getNumericValue(compliance: string): number {
+    return this.complianceService.getNumericValue(compliance);
   }
 }
